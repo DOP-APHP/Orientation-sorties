@@ -1,0 +1,2958 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Outil d'aide à l'orientation des sorties d'hospitalisation : aiguillage vers les dispositifs et les pages Intranet AP-HP. Aucune donnée patient n'est saisie.">
+    <title>Orientation des Sorties & Parcours RAD — Intranet AP-HP</title>
+    <style>
+        #intranet-widget button,
+        #intranet-widget a {
+            font-family: inherit;
+        }
+
+        #intranet-widget button:focus-visible,
+        #intranet-widget a:focus-visible {
+            outline: 3px solid var(--aphp-dark);
+            outline-offset: 2px;
+        }
+
+        #intranet-widget abbr[title] {
+            text-decoration: underline dotted;
+            text-underline-offset: 2px;
+            cursor: help;
+        }
+
+        #intranet-widget .question-heading:focus,
+        #intranet-widget .bento-title:focus {
+            outline: none;
+        }
+
+        #intranet-widget .content-version {
+            display: none;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        #intranet-widget {
+            --aphp-blue: #00509a;
+            --aphp-dark: #003a70;
+            --aphp-ice: #f0f7ff;
+            --aphp-border: #d0e3f7;
+            --surface-white: #ffffff;
+            --bg-canvas: #f8fafc;
+            --text-primary: #1d1d1f;
+            --text-secondary: #515154;
+            --text-muted: #6e6e73;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-pill: 999px;
+            --shadow-soft: 0 6px 24px rgba(0, 80, 154, 0.06);
+            --shadow-hover: 0 10px 30px rgba(0, 80, 154, 0.13);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            line-height: normal;
+            text-align: left;
+            background-color: var(--surface-white);
+            width: 100%;
+            margin: 20px auto;
+            max-width: 920px;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--aphp-blue);
+            box-shadow: var(--shadow-soft);
+            padding: 24px 32px 28px 32px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-sizing: border-box;
+            transition: max-width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #intranet-widget *,
+        #intranet-widget *::before,
+        #intranet-widget *::after {
+            box-sizing: border-box;
+        }
+
+        #intranet-widget.with-copilot {
+            max-width: 1360px;
+        }
+
+        #intranet-widget .widget-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        #intranet-widget .widget-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #intranet-widget .brand-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--aphp-blue);
+        }
+
+        #intranet-widget .brand-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        #intranet-widget .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        #intranet-widget .btn-reset-top {
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            border: 1.5px solid var(--aphp-blue);
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .btn-reset-top:hover {
+            background-color: var(--aphp-ice);
+        }
+
+        #intranet-widget .breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 14px;
+            margin-bottom: 4px;
+        }
+
+        #intranet-widget .crumb-pill {
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            border: 1px solid var(--aphp-border);
+            padding: 5px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .crumb-pill:hover {
+            background-color: var(--aphp-ice);
+            border-color: var(--aphp-blue);
+        }
+
+        #intranet-widget .crumb-pill.current {
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+            border-color: var(--aphp-blue);
+            cursor: default;
+        }
+
+        #intranet-widget .crumb-sep {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        #intranet-widget #stage-area {
+            padding-top: 16px;
+        }
+
+        #intranet-widget .fade-view {
+            animation: aphpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes aphpFade {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #intranet-widget .question-stage {
+            width: 100%;
+            max-width: 780px;
+            margin: 4px auto 8px auto;
+            background-color: var(--surface-white);
+            border: 1.5px solid var(--aphp-border);
+            border-top: 5px solid var(--aphp-blue);
+            border-radius: var(--radius-lg);
+            padding: 30px 32px;
+            text-align: center;
+            box-shadow: 0 4px 18px rgba(0, 80, 154, 0.04);
+        }
+
+        #intranet-widget .step-kicker {
+            display: inline-block;
+            background-color: var(--aphp-ice);
+            color: var(--aphp-blue);
+            border: 1px solid var(--aphp-border);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+        }
+
+        #intranet-widget .question-heading {
+            font-size: 1.42rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.35;
+            margin: 0 0 24px 0;
+            letter-spacing: -0.3px;
+        }
+
+        #intranet-widget .choices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+            gap: 14px;
+        }
+
+        #intranet-widget .choice-card {
+            background-color: var(--surface-white);
+            border: 1.5px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.18s ease;
+        }
+
+        #intranet-widget .choice-card-label {
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: var(--aphp-blue);
+            line-height: 1.4;
+        }
+
+        #intranet-widget .choice-card-arrow {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--aphp-blue);
+            transition: transform 0.18s ease;
+            flex-shrink: 0;
+        }
+
+        #intranet-widget .choice-card:hover {
+            background-color: var(--aphp-blue);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        #intranet-widget .choice-card:hover .choice-card-label,
+        #intranet-widget .choice-card:hover .choice-card-arrow {
+            color: var(--surface-white);
+        }
+
+        #intranet-widget .choice-card:hover .choice-card-arrow {
+            transform: translateX(4px);
+        }
+
+        #intranet-widget .assistant-section {
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--aphp-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #intranet-widget .btn-assistant-trigger {
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            border: 1.5px solid var(--aphp-blue);
+            padding: 8px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .btn-assistant-trigger:hover {
+            background-color: var(--aphp-ice);
+        }
+
+        #intranet-widget .quiz-card {
+            width: 100%;
+            background-color: var(--surface-white);
+            border: 2px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            margin-top: 14px;
+            text-align: left;
+        }
+
+        #intranet-widget .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        #intranet-widget .quiz-title {
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        #intranet-widget .quiz-close-btn {
+            background: var(--surface-white);
+            border: 1px solid var(--aphp-blue);
+            color: var(--aphp-blue);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #intranet-widget .quiz-q-text {
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            line-height: 1.45;
+        }
+
+        #intranet-widget .quiz-opt-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #intranet-widget .quiz-opt-item {
+            background-color: var(--surface-white);
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 11px 15px;
+            text-align: left;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--aphp-blue);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .quiz-opt-item:hover {
+            background-color: var(--aphp-ice);
+            border-color: var(--aphp-blue);
+        }
+
+        #intranet-widget .quiz-verdict-box {
+            background-color: var(--aphp-ice);
+            border-left: 4px solid var(--aphp-blue);
+            padding: 13px 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--aphp-dark);
+            margin-bottom: 14px;
+        }
+
+        #intranet-widget .quiz-actions-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #intranet-widget .btn-quiz-go {
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+            border: none;
+            padding: 9px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #intranet-widget .btn-quiz-go:hover {
+            background-color: var(--aphp-dark);
+        }
+
+        #intranet-widget .btn-quiz-retry {
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            border: 1px solid var(--aphp-blue);
+            padding: 9px 15px;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #intranet-widget .workspace-split {
+            display: flex;
+            gap: 22px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        #intranet-widget .workspace-main {
+            flex: 1 1 54%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #intranet-widget .workspace-copilot {
+            flex: 0 0 44%;
+            max-width: 470px;
+            background-color: var(--surface-white);
+            border: 2px solid var(--aphp-blue);
+            border-top: 6px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        @media (max-width: 1040px) {
+            #intranet-widget .workspace-split {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #intranet-widget .workspace-main {
+                flex: 0 0 auto;
+            }
+            #intranet-widget .workspace-copilot {
+                flex: 1 1 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        #intranet-widget .bento-hero {
+            background-color: var(--surface-white);
+            border: 2px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+            padding: 22px 24px;
+        }
+
+        #intranet-widget .bento-hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        #intranet-widget .bento-title {
+            font-size: 1.32rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            margin: 0;
+            line-height: 1.28;
+        }
+
+        #intranet-widget .delay-badge {
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 5px 13px;
+            border-radius: var(--radius-pill);
+            white-space: nowrap;
+        }
+
+        #intranet-widget .delay-badge.urgent { background: #fff5f5; color: #9b2c2c; border: 1px solid #feb2b2; }
+        #intranet-widget .delay-badge.warn { background: #fffaf0; color: #9c4221; border: 1px solid #fbd38d; }
+        #intranet-widget .delay-badge.info { background: var(--aphp-ice); color: var(--aphp-blue); border: 1px solid var(--aphp-border); }
+
+        #intranet-widget .bento-summary {
+            font-size: 0.94rem;
+            line-height: 1.55;
+            color: var(--text-secondary);
+            margin: 0 0 14px 0;
+        }
+
+        #intranet-widget .delay-callout {
+            background-color: var(--aphp-ice);
+            border-left: 4px solid var(--aphp-blue);
+            padding: 11px 14px;
+            border-radius: 6px;
+            font-size: 0.86rem;
+            line-height: 1.48;
+            color: var(--aphp-dark);
+        }
+
+        #intranet-widget .pedagogie-callout {
+            margin-top: 10px;
+            padding: 11px 14px;
+            background-color: var(--surface-white);
+            border: 1px solid var(--aphp-border);
+            border-radius: 6px;
+            font-size: 0.84rem;
+            line-height: 1.45;
+            color: var(--text-secondary);
+        }
+
+        #intranet-widget .pedagogie-callout h4 {
+            margin: 0 0 4px 0;
+            color: var(--aphp-blue);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+        }
+
+        #intranet-widget .pedagogie-callout p {
+            margin: 0;
+        }
+
+        #intranet-widget .key-points,
+        #intranet-widget .role-step-bullets {
+            margin: 4px 0 0 0;
+            padding-left: 18px;
+            list-style: none;
+        }
+
+        #intranet-widget .key-points li,
+        #intranet-widget .role-step-bullets li {
+            position: relative;
+            margin: 2px 0;
+            line-height: 1.4;
+        }
+
+        #intranet-widget .key-points li::before,
+        #intranet-widget .role-step-bullets li::before {
+            content: "–";
+            position: absolute;
+            left: -14px;
+            color: var(--aphp-blue);
+            font-weight: 700;
+        }
+
+        #intranet-widget .key-points li {
+            color: var(--text-primary);
+        }
+
+        #intranet-widget .hero-demarche-cta-row {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--aphp-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        #intranet-widget .hero-demarche-cta-hint {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--aphp-blue);
+        }
+
+        #intranet-widget .btn-hero-demarche {
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+            border: 2px solid var(--aphp-blue);
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 80, 154, 0.2);
+        }
+
+        #intranet-widget .btn-hero-demarche:hover {
+            background-color: var(--aphp-dark);
+            border-color: var(--aphp-dark);
+            transform: translateY(-1px);
+        }
+
+        #intranet-widget .btn-hero-demarche.active {
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            box-shadow: none;
+        }
+
+        #intranet-widget .cerfa-compact-bar {
+            background-color: var(--surface-white);
+            border: 1.5px solid var(--aphp-border);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #intranet-widget .cerfa-compact-label {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+
+        #intranet-widget .cerfa-pills-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #intranet-widget .cerfa-compact-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background-color: var(--surface-white);
+            border: 1.5px solid var(--aphp-blue);
+            padding: 5px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--aphp-blue);
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .cerfa-compact-pill:hover {
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+            transform: translateY(-1px);
+        }
+
+        #intranet-widget .cerfa-compact-code {
+            background-color: var(--aphp-ice);
+            color: var(--aphp-blue);
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+        }
+
+        #intranet-widget .cerfa-compact-pill:hover .cerfa-compact-code {
+            background-color: rgba(255, 255, 255, 0.22);
+            color: var(--surface-white);
+        }
+
+        #intranet-widget .intranet-gateway-bar {
+            background-color: var(--aphp-ice);
+            border: 1.5px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        #intranet-widget .gateway-info {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        #intranet-widget .gateway-label {
+            font-size: 0.73rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        #intranet-widget .gateway-desc {
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        #intranet-widget .btn-gateway-primary {
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: 0 3px 10px rgba(0, 80, 154, 0.18);
+            white-space: nowrap;
+        }
+
+        #intranet-widget .btn-gateway-primary:hover {
+            background-color: var(--aphp-dark);
+            transform: translateY(-1px);
+        }
+
+        #intranet-widget .copilot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--aphp-ice);
+            gap: 8px;
+        }
+
+        #intranet-widget .copilot-title {
+            font-size: 0.86rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        #intranet-widget .copilot-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #intranet-widget .btn-copilot-small {
+            background-color: var(--surface-white);
+            border: 1px solid var(--aphp-blue);
+            color: var(--aphp-blue);
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 0.73rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .btn-copilot-small:hover {
+            background-color: var(--aphp-ice);
+        }
+
+        #intranet-widget .copilot-sec-label {
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin: 10px 0 8px 0;
+        }
+
+        #intranet-widget .role-accordion-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #intranet-widget .role-accordion-card {
+            border: 1.5px solid var(--aphp-border);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--surface-white);
+        }
+
+        #intranet-widget .role-accordion-header {
+            width: 100%;
+            background-color: var(--surface-white);
+            border: none;
+            border-left: 4px solid var(--aphp-blue);
+            padding: 10px 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.15s ease;
+        }
+
+        #intranet-widget .role-accordion-header:hover {
+            background-color: var(--aphp-ice);
+        }
+
+        #intranet-widget .role-accordion-header.open {
+            background-color: var(--aphp-ice);
+            border-bottom: 1px solid var(--aphp-border);
+        }
+
+        #intranet-widget .role-header-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--aphp-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        #intranet-widget .role-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #intranet-widget .role-count-pill {
+            font-size: 0.71rem;
+            font-weight: 700;
+            color: var(--aphp-blue);
+            background-color: var(--surface-white);
+            border: 1px solid var(--aphp-border);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+        }
+
+        #intranet-widget .role-chevron {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--aphp-blue);
+        }
+
+        #intranet-widget .role-accordion-body {
+            padding: 12px 14px;
+            background-color: var(--surface-white);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #intranet-widget .role-step-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.83rem;
+            line-height: 1.48;
+            color: var(--text-primary);
+        }
+
+        #intranet-widget .role-step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+            font-size: 0.72rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        #intranet-widget .role-step-text {
+            flex: 1;
+        }
+
+        #intranet-widget .role-step-title {
+            font-weight: 800;
+            color: var(--aphp-blue);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        #intranet-widget .role-vigilance-box {
+            background-color: var(--aphp-ice);
+            border: 1px solid var(--aphp-border);
+            border-left: 3.5px solid var(--aphp-blue);
+            border-radius: 6px;
+            padding: 8px 11px;
+            font-size: 0.79rem;
+            line-height: 1.42;
+            color: var(--aphp-dark);
+            margin-top: 2px;
+        }
+
+        #intranet-widget .role-vigilance-label {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.3px;
+            color: var(--aphp-blue);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        #intranet-widget .copilot-cerfa-box {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--aphp-border);
+        }
+
+        #intranet-widget .copilot-cerfa-link-card {
+            display: block;
+            text-decoration: none;
+            background-color: var(--bg-canvas);
+            border: 1.5px solid var(--aphp-border);
+            border-radius: 7px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            line-height: 1.42;
+            color: var(--text-primary);
+            transition: all 0.16s ease;
+        }
+
+        #intranet-widget .copilot-cerfa-link-card:last-child {
+            margin-bottom: 0;
+        }
+
+        #intranet-widget .copilot-cerfa-link-card:hover {
+            background-color: var(--aphp-ice);
+            border-color: var(--aphp-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 80, 154, 0.08);
+        }
+
+        #intranet-widget .copilot-cerfa-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        #intranet-widget .copilot-cerfa-name {
+            font-weight: 800;
+            color: var(--aphp-blue);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #intranet-widget .copilot-cerfa-desc {
+            color: var(--text-secondary);
+        }
+
+        #intranet-widget .copilot-cerfa-role {
+            font-size: 0.71rem;
+            font-weight: 700;
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            border: 1px solid var(--aphp-blue);
+            padding: 1px 8px;
+            border-radius: var(--radius-pill);
+        }
+
+        #intranet-widget .footer-nav {
+            margin-top: 20px;
+            padding-top: 14px;
+            border-top: 1px solid #e5e5ea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #intranet-widget .footer-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        #intranet-widget .btn-nav-outline {
+            background-color: var(--surface-white);
+            color: var(--aphp-blue);
+            border: 1.5px solid var(--aphp-blue);
+            padding: 7px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        #intranet-widget .btn-nav-outline:hover {
+            background-color: var(--aphp-ice);
+        }
+
+        #intranet-widget .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+            #intranet-widget { padding: 18px 16px 20px 16px; margin: 8px auto; }
+            #intranet-widget .question-stage { padding: 22px 16px; }
+            #intranet-widget .question-heading { font-size: 1.2rem; }
+            #intranet-widget .bento-hero { padding: 18px 16px; }
+            #intranet-widget .delay-badge,
+            #intranet-widget .btn-gateway-primary,
+            #intranet-widget .cerfa-compact-label { white-space: normal; }
+            #intranet-widget .btn-gateway-primary { max-width: 100%; justify-content: center; }
+        }
+
+        #intranet-widget {
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+        }
+
+        @keyframes aphpEnterForward {
+            from { opacity: 0; transform: translateX(22px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes aphpEnterBack {
+            from { opacity: 0; transform: translateX(-22px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes aphpRise {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes aphpPop {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes aphpUnfold {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes aphpPanelIn {
+            from { opacity: 0; transform: translateX(28px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes aphpPulseUrgent {
+            0% { box-shadow: 0 0 0 0 rgba(155, 44, 44, 0.32); }
+            100% { box-shadow: 0 0 0 9px rgba(155, 44, 44, 0); }
+        }
+
+        @keyframes aphpTopLine {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        #intranet-widget #stage-area.anim-forward > * { animation: aphpEnterForward 0.42s var(--ease-out) both; }
+        #intranet-widget #stage-area.anim-back > * { animation: aphpEnterBack 0.42s var(--ease-out) both; }
+        #intranet-widget #stage-area.anim-initial > * { animation: aphpRise 0.5s var(--ease-out) both; }
+
+        #intranet-widget .question-stage { position: relative; border-top-color: var(--aphp-border); }
+        #intranet-widget .question-stage::before {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: -1.5px;
+            right: -1.5px;
+            height: 5px;
+            border-radius: 14px 14px 0 0;
+            background: linear-gradient(90deg, var(--aphp-dark), var(--aphp-blue));
+            transform-origin: left center;
+            animation: aphpTopLine 0.6s var(--ease-out) both;
+        }
+        #intranet-widget .question-stage .step-kicker { animation: aphpRise 0.45s var(--ease-out) 0.05s both; }
+        #intranet-widget .question-stage .question-heading { animation: aphpRise 0.45s var(--ease-out) 0.1s both; }
+        #intranet-widget .choices-grid .choice-card { animation: aphpRise 0.45s var(--ease-out) both; }
+        #intranet-widget .choices-grid .choice-card:nth-child(1) { animation-delay: 0.16s; }
+        #intranet-widget .choices-grid .choice-card:nth-child(2) { animation-delay: 0.22s; }
+        #intranet-widget .choices-grid .choice-card:nth-child(3) { animation-delay: 0.28s; }
+        #intranet-widget .choices-grid .choice-card:nth-child(4) { animation-delay: 0.34s; }
+        #intranet-widget .choices-grid .choice-card:nth-child(n+5) { animation-delay: 0.4s; }
+        #intranet-widget .question-stage .assistant-section { animation: aphpRise 0.45s var(--ease-out) 0.38s both; }
+
+        #intranet-widget .choice-card {
+            transition: background-color 0.25s var(--ease-out), box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out), border-color 0.25s var(--ease-out);
+        }
+        #intranet-widget .choice-card-label { transition: color 0.2s ease; }
+        #intranet-widget .choice-card-arrow { transition: transform 0.3s var(--ease-spring), color 0.2s ease; }
+        #intranet-widget .choice-card:active {
+            transform: translateY(0) scale(0.985);
+            box-shadow: 0 3px 10px rgba(0, 80, 154, 0.15);
+            transition-duration: 0.08s;
+        }
+
+        #intranet-widget .crumb-pill.current { animation: aphpPop 0.4s var(--ease-spring) both; }
+        #intranet-widget .crumb-pill { transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s var(--ease-out); }
+        #intranet-widget .crumb-pill:not(.current):hover { transform: translateY(-1px); }
+
+        #intranet-widget .workspace-main > .bento-hero { animation: aphpRise 0.5s var(--ease-out) 0.05s both; }
+        #intranet-widget .workspace-main > .cerfa-compact-bar { animation: aphpRise 0.5s var(--ease-out) 0.16s both; }
+        #intranet-widget .workspace-main > .intranet-gateway-bar { animation: aphpRise 0.5s var(--ease-out) 0.26s both; }
+        #intranet-widget .bento-hero .delay-badge { animation: aphpPop 0.45s var(--ease-spring) 0.25s both; }
+        #intranet-widget .bento-hero .delay-badge.urgent { animation: aphpPop 0.45s var(--ease-spring) 0.25s both, aphpPulseUrgent 1.4s ease-out 0.8s 2; }
+        #intranet-widget .cerfa-compact-pill { transition: background-color 0.2s ease, color 0.2s ease, transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out); }
+        #intranet-widget .cerfa-compact-pill:hover { box-shadow: 0 4px 12px rgba(0, 80, 154, 0.16); }
+
+        #intranet-widget .btn-hero-demarche,
+        #intranet-widget .btn-gateway-primary {
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.25s var(--ease-out), transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+        }
+        #intranet-widget .btn-hero-demarche::after,
+        #intranet-widget .btn-gateway-primary::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+            transform: translateX(-120%);
+            transition: transform 0.8s var(--ease-out);
+            pointer-events: none;
+        }
+        #intranet-widget .btn-hero-demarche:hover::after,
+        #intranet-widget .btn-gateway-primary:hover::after { transform: translateX(120%); }
+        #intranet-widget .btn-hero-demarche.active::after { display: none; }
+        #intranet-widget .btn-hero-demarche:active,
+        #intranet-widget .btn-gateway-primary:active { transform: scale(0.98); }
+
+        #intranet-widget #copilot-panel:not(.hidden) { animation: aphpPanelIn 0.5s var(--ease-out) both; }
+        #intranet-widget .role-accordion-card { animation: aphpRise 0.4s var(--ease-out) both; }
+        #intranet-widget .role-accordion-card:nth-child(1) { animation-delay: 0.12s; }
+        #intranet-widget .role-accordion-card:nth-child(2) { animation-delay: 0.18s; }
+        #intranet-widget .role-accordion-card:nth-child(3) { animation-delay: 0.24s; }
+        #intranet-widget .role-accordion-body:not(.hidden) > * { animation: aphpUnfold 0.32s var(--ease-out) both; }
+        #intranet-widget .role-accordion-body:not(.hidden) > :nth-child(2) { animation-delay: 0.05s; }
+        #intranet-widget .role-accordion-body:not(.hidden) > :nth-child(3) { animation-delay: 0.1s; }
+        #intranet-widget .role-accordion-body:not(.hidden) > :nth-child(n+4) { animation-delay: 0.15s; }
+        #intranet-widget .role-step-num { transition: transform 0.3s var(--ease-spring); }
+        #intranet-widget .role-step-row:hover .role-step-num { transform: scale(1.12); }
+        #intranet-widget .copilot-cerfa-link-card { transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out); }
+
+        #intranet-widget #quiz-box-container:not(.hidden) { animation: aphpUnfold 0.35s var(--ease-out) both; }
+        #intranet-widget #quiz-box-body .quiz-q-text { animation: aphpRise 0.35s var(--ease-out) both; }
+        #intranet-widget #quiz-box-body .quiz-opt-item { animation: aphpRise 0.35s var(--ease-out) both; transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.25s var(--ease-out); }
+        #intranet-widget #quiz-box-body .quiz-opt-item:nth-child(1) { animation-delay: 0.06s; }
+        #intranet-widget #quiz-box-body .quiz-opt-item:nth-child(2) { animation-delay: 0.11s; }
+        #intranet-widget #quiz-box-body .quiz-opt-item:nth-child(3) { animation-delay: 0.16s; }
+        #intranet-widget #quiz-box-body .quiz-opt-item:nth-child(n+4) { animation-delay: 0.21s; }
+        #intranet-widget #quiz-box-body .quiz-opt-item:hover { transform: translateX(4px); }
+        #intranet-widget #quiz-box-body .quiz-verdict-box { animation: aphpPop 0.4s var(--ease-spring) both; }
+        #intranet-widget #quiz-box-body .quiz-actions-row { animation: aphpRise 0.35s var(--ease-out) 0.12s both; }
+
+        @media (prefers-reduced-motion: reduce) {
+            #intranet-widget *,
+            #intranet-widget *::before,
+            #intranet-widget *::after {
+                animation-duration: 0.01ms !important;
+                animation-delay: 0s !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        #intranet-widget .feedback-row {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: right;
+            padding: 0 4px;
+        }
+
+        #intranet-widget .feedback-link {
+            color: var(--aphp-blue);
+            font-weight: 700;
+            text-underline-offset: 2px;
+        }
+
+        #intranet-widget .gateway-pending {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 16px;
+            border: 1.5px dashed var(--aphp-border);
+            border-radius: var(--radius-pill);
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: var(--surface-white);
+        }
+
+        #intranet-widget .link-fallback {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1.5px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+            background: var(--aphp-ice);
+        }
+
+        #intranet-widget .link-fallback-text {
+            margin: 0;
+            font-size: 0.82rem;
+            color: var(--aphp-dark);
+            font-weight: 600;
+        }
+
+        #intranet-widget.is-embedded {
+            margin: 0 auto;
+            box-shadow: none;
+        }
+
+        #intranet-widget .copy-fallback {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px 12px;
+            font: inherit;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            border: 1.5px solid var(--aphp-blue);
+            border-radius: var(--radius-md);
+        }
+
+        #intranet-widget .btn-nav-outline.is-done {
+            background-color: var(--aphp-blue);
+            color: var(--surface-white);
+        }
+
+        @page { size: A4 portrait; margin: 12mm; }
+        @media print {
+            #intranet-widget *,
+            #intranet-widget *::before,
+            #intranet-widget *::after { animation: none !important; transition: none !important; }
+            #intranet-widget .question-stage::before { display: none !important; }
+            #intranet-widget .feedback-row,
+            #intranet-widget .copy-fallback,
+            #intranet-widget .link-fallback { display: none !important; }
+            #intranet-widget { border: none; box-shadow: none; padding: 0; margin: 0; max-width: 100% !important; }
+            #intranet-widget .content-version { display: block !important; margin-top: 10px; }
+            #intranet-widget abbr[title] { text-decoration: none; }
+            #intranet-widget .topbar-actions,
+            #intranet-widget .footer-nav,
+            #intranet-widget .assistant-section,
+            #intranet-widget .intranet-gateway-bar,
+            #intranet-widget .hero-demarche-cta-row,
+            #intranet-widget .copilot-header-actions,
+            #intranet-widget .role-chevron { display: none !important; }
+            #intranet-widget .workspace-split { display: block !important; }
+            #intranet-widget #copilot-panel,
+            #intranet-widget #copilot-panel.hidden {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-top: 14px !important;
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+            }
+            #intranet-widget .role-accordion-body,
+            #intranet-widget .role-accordion-body.hidden {
+                display: flex !important;
+            }
+            #intranet-widget .bento-hero,
+            #intranet-widget .cerfa-compact-bar,
+            #intranet-widget .role-accordion-card,
+            #intranet-widget .copilot-cerfa-link-card {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin-bottom: 10px !important;
+                border-color: #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intranet-widget">
+        <div>
+            <div class="widget-topbar">
+                <div class="widget-brand">
+                    <span class="brand-dot"></span>
+                    <span class="brand-title">Orientation des Sorties & Parcours RAD</span>
+                </div>
+                <div class="topbar-actions">
+                    <button type="button" id="btn-reset-top" class="btn-reset-top hidden" data-action="reset">
+                        Recommencer l'orientation
+                    </button>
+                </div>
+            </div>
+
+            <nav id="breadcrumb-bar" class="breadcrumb-bar hidden" aria-label="Fil d'Ariane"></nav>
+        </div>
+
+        <div id="stage-area"></div>
+
+        <div id="footer-nav" class="footer-nav hidden">
+            <button type="button" id="btn-back" class="btn-nav-outline" data-action="back">
+                ← Étape précédente
+            </button>
+            <div class="footer-actions">
+                <button type="button" id="btn-copy-link" class="btn-nav-outline hidden" data-action="copy-link">
+                    Copier le lien de cette fiche
+                </button>
+                <button type="button" id="btn-print-memo" class="btn-nav-outline hidden" data-action="print">
+                    Imprimer ce mémo (A4)
+                </button>
+                <button type="button" class="btn-nav-outline" data-action="reset">
+                    Retour au début
+                </button>
+            </div>
+        </div>
+        <input type="text" id="copy-fallback" class="copy-fallback hidden" readonly aria-label="Lien de la fiche à copier">
+        <div id="link-fallback" class="link-fallback hidden" role="status">
+            <p class="link-fallback-text">L'intranet a bloqué l'ouverture de ce lien depuis l'outil. Copiez l'adresse ci-dessous et collez-la dans un nouvel onglet :</p>
+            <input type="text" id="link-fallback-input" class="copy-fallback" readonly aria-label="Adresse du lien à ouvrir">
+        </div>
+        <div id="content-version" class="content-version"></div>
+    </div>
+
+    <script>
+        (function() {
+            /*
+             * CONFIGURATION DE L'OUTIL — seul bloc à modifier lors d'un déploiement sur un nouveau site
+             * 1. sitesAPHP : une entrée par hôpital. Dans "pages", remplacer chaque url provisoire (#intranet-…)
+             *    par l'adresse de la page Intranet du site. Dans "ancres", associer à une branche (ex. "res_ehpad")
+             *    le lien d'ancre copié sur le titre de section de la page ; sans ancre, le bouton ouvre la page en haut.
+             * 2. Le site est lu dans l'attribut data-site du bloc #intranet-widget, ou dans l'adresse (?site=beaujon).
+             * 3. contactMiseAJour : adresse de la DOP qui reçoit les signalements de mise à jour (vide = lien masqué).
+             * 4. mesureAudience : événements anonymes de consultation (aucune donnée patient) vers l'outil de mesure.
+             * 5. urlOutil : adresse de la page Intranet qui affiche l'outil, utilisée pour les liens partagés
+             *    (vide = adresse de la page détectée automatiquement).
+             * 7. Intégration SharePoint : publier ce fichier sous le nom index.html sur le site web de l'équipe, puis coller
+             *    dans le composant « Incorporer » : <iframe src="[adresse du site]?site=bichat" width="1200" height="1000"
+             *    title="Orientation des sorties"></iframe>. Ajouter #orientation=res_ehpad à la fin de l'adresse ouvre
+             *    directement une fiche. Tant qu'une page Intranet garde son adresse provisoire (#intranet-…), le bouton
+             *    de la passerelle est remplacé par la mention « page en cours de création ».
+             * 6. routageIntranetAPHP : "section" reprend exactement le titre de section de la page Intranet.
+             */
+            var configurationOutil = {
+                siteParDefaut: "bichat",
+                contactMiseAJour: "",
+                mesureAudience: true,
+                urlOutil: ""
+            };
+
+            var sitesAPHP = {
+                "bichat": {
+                    pages: { contacts: "#intranet-contacts-internes", smr: "#intranet-smr", domicile: "#intranet-retour-domicile", grand_age: "#intranet-grand-age", handicap: "#intranet-handicap", precarite: "#intranet-precarite" },
+                    ancres: {}
+                },
+                "beaujon": {
+                    pages: { contacts: "#intranet-contacts-internes", smr: "#intranet-smr", domicile: "#intranet-retour-domicile", grand_age: "#intranet-grand-age", handicap: "#intranet-handicap", precarite: "#intranet-precarite" },
+                    ancres: {}
+                }
+            };
+
+            var pagesIntranetAPHP = {
+                "contacts": { titre: "Mes contacts internes" },
+                "smr": { titre: "SMR / SSR" },
+                "domicile": { titre: "Retour à domicile : soins et coordination" },
+                "grand_age": { titre: "Grand âge" },
+                "handicap": { titre: "Handicap" },
+                "precarite": { titre: "Précarité / sans domicile" }
+            };
+
+            var routageIntranetAPHP = {
+                "res_hotel_hosp": { page: "contacts", section: "Hôtel hospitalier" },
+                "res_ssr": { page: "smr", section: "Soins médicaux et de réadaptation (SMR)" },
+                "res_rad_standard": { page: "domicile", section: "Retour à domicile simple" },
+                "res_ssiad": { page: "domicile", section: "Soins infirmiers à domicile" },
+                "res_had": { page: "domicile", section: "Hospitalisation à domicile (HAD)" },
+                "res_hdj": { page: "domicile", section: "Hôpital de jour (HDJ)" },
+                "res_prado": { page: "domicile", section: "PRADO" },
+                "res_cpts": { page: "domicile", section: "Communautés professionnelles territoriales de santé (CPTS)" },
+                "res_dac": { page: "domicile", section: "Dispositifs d'appui à la coordination (DAC)" },
+                "res_apa_saad": { page: "grand_age", section: "APA et aide à domicile (SAD)" },
+                "res_pch": { page: "handicap", section: "Prestation de compensation du handicap (PCH)" },
+                "res_mdph_domicile": { page: "handicap", section: "MDPH : AAH et SAMSAH" },
+                "res_crt": { page: "grand_age", section: "Centres de ressources territoriaux (CRT)" },
+                "res_accueil_jour": { page: "grand_age", section: "Accueil de jour" },
+                "res_maison_repit": { page: "grand_age", section: "Répit et hébergement temporaire" },
+                "res_ehpad": { page: "grand_age", section: "EHPAD" },
+                "res_usld": { page: "grand_age", section: "Unité de soins de longue durée (USLD)" },
+                "res_residence_autonomie": { page: "grand_age", section: "Résidence autonomie" },
+                "res_uspc": { page: "handicap", section: "Unité de soins prolongés complexes (USPC)" },
+                "res_mas": { page: "handicap", section: "Maison d'accueil spécialisée (MAS)" },
+                "res_fam": { page: "handicap", section: "Foyer d'accueil médicalisé (FAM / EAM)" },
+                "res_siao": { page: "precarite", section: "SIAO / 115" },
+                "res_lhss": { page: "precarite", section: "Lits halte soins santé (LHSS)" },
+                "res_lam": { page: "precarite", section: "Lits d'accueil médicalisés (LAM)" },
+                "res_act": { page: "precarite", section: "Appartements de coordination thérapeutique (ACT)" }
+            };
+
+            var VERSION_CONTENU = "Version du contenu : novembre 2026";
+            var CLE_HISTORIQUE = "aphpOrientationSorties";
+
+            var catalogueFormulaires = {
+                "MDPH_COMPLET": [
+                    { code: "Cerfa 15692*01", acteur: "Assistante Sociale / Patient", titre: "Demande MDPH", desc: "Demande à la MDPH, remplie avec le patient.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R19993" },
+                    { code: "Cerfa 15695*01", acteur: "Médecin Hospitalier", titre: "Certificat médical MDPH", desc: "Certificat médical décrivant le retentissement du handicap.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R19996" }
+                ],
+                "APA_DOMICILE": [
+                    { code: "Cerfa 16301*01", acteur: "Assistante Sociale / Famille", titre: "Demande d'APA à domicile", desc: "Demande d'APA et d'aides des caisses de retraite.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R64469" },
+                    { code: "Grille AGGIR", acteur: "Médecin / Équipe Gériatrique", titre: "Grille nationale AGGIR", desc: "Évalue la dépendance : GIR 1 à 4 ouvrent droit à l'APA.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/F1229" }
+                ],
+                "EHPAD_USLD_JCP": [
+                    { code: "Cerfa 14732*03", acteur: "Médecin + Assistante Sociale", titre: "Dossier EHPAD / USLD", desc: "Dossier national d'admission en EHPAD ou USLD, sur ViaTrajectoire.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R17461" },
+                    { code: "Cerfa 15891*03", acteur: "AS / Famille + Médecin", titre: "Requête JCP (Protection)", desc: "Requête au juge pour une mesure de protection.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R50473" },
+                    { code: "Dossier ASH", acteur: "Assistante Sociale", titre: "Aide Sociale Hébergement", desc: "Aide du Département quand les ressources ne couvrent pas l'hébergement.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/F2444" }
+                ],
+                "PRECARITE_DROITS": [
+                    { code: "Cerfa 11573*09", acteur: "Assistante Sociale / PASS", titre: "Demande d'AME", desc: "Aide médicale de l'État, après 3 mois de résidence en France.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R1266" },
+                    { code: "Cerfa 12504*14", acteur: "Assistante Sociale / PASS", titre: "Demande de CSS", desc: "Complémentaire santé solidaire : couvre la mutuelle et le forfait journalier.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R1471" },
+                    { code: "Cerfa 16029*01", acteur: "Assistante Sociale", titre: "Domiciliation CCAS", desc: "Domiciliation administrative d'une personne sans domicile.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R44660" }
+                ],
+                "TRANSPORT_SANITAIRE": [
+                    { code: "Cerfa 11574*07", acteur: "Médecin Hospitalier", titre: "Prescription Transport (PMT)", desc: "Prescription de transport : ambulance, VSL ou taxi.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R15649" },
+                    { code: "Cerfa 11575*08", acteur: "Médecin Hospitalier", titre: "Accord Préalable (DAP)", desc: "Accord préalable : plus de 150 km, transports en série, avion ou bateau.", url: "https://www.service-public.gouv.fr/particuliers/vosdroits/R62614" }
+                ]
+            };
+
+            function trouverFormulaire(code) {
+                for (var cle in catalogueFormulaires) {
+                    var liste = catalogueFormulaires[cle];
+                    for (var i = 0; i < liste.length; i++) {
+                        if (liste[i].code === code) return liste[i];
+                    }
+                }
+                return null;
+            }
+            function composerGroupe(codes) {
+                return codes.map(trouverFormulaire).filter(Boolean);
+            }
+            catalogueFormulaires["SMR_TRANSFERT"] = composerGroupe(["Cerfa 11574*07", "Cerfa 12504*14"]);
+            catalogueFormulaires["SSIAD_DOMICILE"] = composerGroupe(["Cerfa 16301*01", "Grille AGGIR", "Cerfa 11574*07"]);
+            catalogueFormulaires["USPC_PROTECTION"] = composerGroupe(["Cerfa 15891*03", "Cerfa 11574*07"]);
+            catalogueFormulaires["LOGEMENT_AUTONOMIE"] = composerGroupe(["Cerfa 14732*03", "Dossier ASH"]);
+
+            var demarchesMetiers = {
+                "SMR": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le volet médical ViaTrajectoire", texte: ["Consignes d'appui", "Soins techniques : O2, VNI, TPN, dialyse", "Statut BMR / BHRe"] },
+                        { titre: "Préparer le transfert", texte: ["Lettre de liaison et ordonnances", "Prescription de transport (PMT)"] },
+                        { vigilance: "Tant que le volet médical n'est pas signé, aucune demande ne peut partir." }
+                    ],
+                    "SERVICE SOCIAL / GESTION DES LITS": [
+                        { titre: "Vérifier les droits", texte: ["Sécurité sociale et mutuelle (ou CSS / AME)", "Demande de CSS si besoin"] },
+                        { titre: "Envoyer et relancer", texte: ["Demandes simultanées : SMR de proximité et de recours", "Relances téléphoniques des cellules d'admission"] },
+                        { vigilance: "Patient isolé ou précaire : préparer dès l'envoi l'après-SMR, sinon refus." }
+                    ],
+                    "IDE / CADRE": [
+                        { titre: "Préparer le départ", texte: ["Écouvillon BMR / BHRe de moins de 7 jours", "Fiche de liaison infirmière", "Transport réservé, heure confirmée avec le SMR"] },
+                        { vigilance: "Pas d'écouvillon récent : premier motif de refus le matin du transfert." }
+                    ]
+                },
+                "HOTEL_HOSP": {
+                    "MÉDECIN": [
+                        { titre: "Vérifier l'éligibilité", texte: ["Autonome pour se déplacer, se laver, manger et prendre ses traitements", "Aucune surveillance nécessaire la nuit", "Motif : distance, logement inadapté ou isolement"] },
+                        { titre: "Prescrire", texte: ["Prescription d'hébergement (3 nuits consécutives max)", "Ordonnance des traitements personnels si besoin"] },
+                        { vigilance: "Contre-indiqué : patient désorienté, à risque de chute ou avec un soin infirmier la nuit." }
+                    ],
+                    "IDE / SECRÉTARIAT / GESTION DES LITS": [
+                        { titre: "Réserver", texte: ["Vérifier la disponibilité de l'hôtel conventionné", "Recueillir l'accord du patient", "Remettre le bon de prise en charge"] },
+                        { titre: "Préparer le lendemain", texte: ["Remettre les convocations écrites : horaire, lieu, consignes de jeûne"] },
+                        { vigilance: "Le patient a ses traitements pour la nuit et un moyen de rejoindre l'hôtel." }
+                    ]
+                },
+                "HAD": {
+                    "MÉDECIN": [
+                        { titre: "Saisir l'HAD 48 à 72 h avant", texte: ["HAD AP-HP : via Orbis", "Autres HAD : ViaTrajectoire ou plateforme de la structure", "Accord du patient et du médecin traitant"] },
+                        { titre: "Rédiger les prescriptions", texte: ["Protocoles de soins détaillés", "Matériel : lit médicalisé, matelas, oxygène"] },
+                        { vigilance: "Lettre de liaison et ordonnances à l'HAD au moins 24 h avant le départ." }
+                    ],
+                    "IDE DE LIAISON HAD / CADRE": [
+                        { titre: "Organiser la visite au lit", texte: ["IDE de coordination HAD, patient et aidant"] },
+                        { titre: "Caler le départ", texte: ["Fiche de liaison : voies veineuses, pansements", "Heure de sortie fixée avec l'HAD"] },
+                        { vigilance: "Pas de départ avant la confirmation de livraison du matériel." }
+                    ]
+                },
+                "HDJ": {
+                    "MÉDECIN": [
+                        { titre: "Programmer la venue", texte: ["Objet de la venue et date de reconvocation"] },
+                        { titre: "Rédiger les documents", texte: ["Lettre de liaison et ordonnances", "PMT pour le retour et pour la venue en HDJ, si justifié"] },
+                        { vigilance: "Bilan à faire en ville avant la venue : remettre l'ordonnance et expliquer la consigne." }
+                    ],
+                    "SECRÉTARIAT / CADRE HDJ": [
+                        { titre: "Réserver et convoquer", texte: ["Bloquer la place en HDJ", "Remettre la convocation écrite avant le départ"] },
+                        { vigilance: "Une convocation « envoyée par courrier » : risque de perdu de vue." }
+                    ]
+                },
+                "SSIAD_IDEL": {
+                    "MÉDECIN": [
+                        { titre: "Rédiger l'ordonnance de soins", texte: ["Actes précis : toilette, injections, pansements", "Fréquence par jour", "Mention « à domicile »", "Mention « dimanches et jours fériés inclus »"] },
+                        { titre: "Compléter", texte: ["Ordonnance séparée pour le matériel", "Lettre de liaison pour l'IDEL ou le SSIAD"] },
+                        { vigilance: "Sans « à domicile », déplacements non remboursés ; sans « dimanches et fériés », pas de soins ces jours-là." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Contacter le SSIAD du secteur", texte: ["Obtenir une place et une date de premier passage"] },
+                        { titre: "Lancer le dossier APA", texte: ["Auxiliaire de vie en complément de l'infirmier", "Moins de 60 ans : PCH via la MDPH"] },
+                        { vigilance: "Lancer l'APA dès que la sortie avec soins est envisagée." }
+                    ],
+                    "IDE / CADRE": [
+                        { titre: "Trouver l'infirmier", texte: ["Cabinet IDEL habituel du patient", "Sinon : CPTS de la commune, ou Hôp'IDEL si l'établissement y adhère", "Premier passage confirmé à J0 ou J1"] },
+                        { titre: "Préparer la sortie", texte: ["Fiche de liaison infirmière", "Matériel pour le premier soin si sortie avant un week-end"] },
+                        { vigilance: "Jamais de sortie avec injections ou pansements quotidiens sans infirmier confirmé." }
+                    ]
+                },
+                "PRADO": {
+                    "MÉDECIN": [
+                        { titre: "Vérifier l'éligibilité", texte: ["Patient autonome, dans un volet PRADO"] },
+                        { titre: "Valider la demande", texte: ["Saisie ViaTrajectoire par le secrétariat, l'IDE ou l'AS", "Validation par le médecin", "Ordonnances de ville et lettre de liaison"] },
+                        { vigilance: "Perte d'autonomie lourde ou isolement : PRADO ne suffit pas, voir APA ou DAC." }
+                    ],
+                    "ÉQUIPE / CONSEILLER ASSURANCE MALADIE": [
+                        { titre: "Envoyer la demande", texte: ["Sur ViaTrajectoire, au moins 48 h avant la sortie"] },
+                        { titre: "Visite du conseiller", texte: ["Rencontre le patient avant la sortie", "Prend les premiers rendez-vous : infirmier, kiné, médecin"] },
+                        { vigilance: "Hors ViaTrajectoire, plus de traitement à partir de fin 2026. Le conseiller n'intervient pas après le retour." }
+                    ]
+                },
+                "CPTS": {
+                    "MÉDECIN": [
+                        { titre: "Préparer le relais", texte: ["Ordonnances : soins infirmiers, kiné, traitements", "Lettre de liaison synthétique"] },
+                        { vigilance: "Préciser « à domicile » si le patient ne peut pas se déplacer." }
+                    ],
+                    "IDE / CADRE / SERVICE SOCIAL": [
+                        { titre: "Contacter la CPTS", texte: ["CPTS de la commune du domicile", "Coordonnées sur la page Intranet"] },
+                        { titre: "Transmettre", texte: ["Besoin précis et date de sortie", "Nom et numéro du professionnel retenu, donnés au patient"] },
+                        { vigilance: "La CPTS ne gère pas les aides à domicile : voir le service social ou le DAC." }
+                    ]
+                },
+                "DAC": {
+                    "MÉDECIN": [
+                        { titre: "Rédiger une synthèse", texte: ["Polypathologie, troubles cognitifs, refus de soins", "Épuisement de l'aidant, réhospitalisations"] },
+                        { vigilance: "Joindre les coordonnées du médecin traitant." }
+                    ],
+                    "SERVICE SOCIAL / CADRE": [
+                        { titre: "Recueillir l'accord", texte: ["Du patient ou de sa personne de confiance"] },
+                        { titre: "Saisir le DAC", texte: ["DAC de la commune du patient", "Fiche de saisine, lettre de liaison, bilan social"] },
+                        { vigilance: "Compter 48 à 72 h ouvrées pour la désignation d'un référent." }
+                    ]
+                },
+                "APA_SAAD": {
+                    "MÉDECIN": [
+                        { titre: "Évaluer la dépendance", texte: ["Grille AGGIR : GIR 1 à 4"] },
+                        { titre: "Prescrire les aides techniques", texte: ["Lit médicalisé, matelas, déambulateur, chaise percée…"] },
+                        { vigilance: "GIR 5 ou 6 : refus de l'APA, orienter vers la caisse de retraite." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Monter le dossier APA", texte: ["Cerfa 16301*01 avec la famille", "Pièce d'identité, avis d'imposition, RIB", "Signaler l'urgence"] },
+                        { titre: "Mettre en place le SAD", texte: ["Passages : lever, toilette, repas", "Financement de transition pendant l'instruction"] },
+                        { vigilance: "Prévoir l'accès au logement : double des clés ou boîte à clés." }
+                    ]
+                },
+                "PCH_HANDICAP": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le certificat MDPH", texte: ["Cerfa 15695*01, complet", "Retentissement au quotidien : mobilité, toilette, communication"] },
+                        { vigilance: "Certificat incomplet : rejet de la PCH." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Déposer la demande", texte: ["Cerfa 15692*01 avec le patient", "Demande d'attribution en urgence"] },
+                        { titre: "Organiser les aides", texte: ["Planning des auxiliaires avec le prestataire et l'entourage, avant la sortie"] }
+                    ]
+                },
+                "MDPH_DOMICILE": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le certificat MDPH", texte: ["Handicap durable", "Besoin d'accompagnement (SAMSAH / SAVS) et/ou d'AAH"] },
+                        { vigilance: "Joindre la lettre de liaison et les bilans spécialisés." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Constituer le dossier", texte: ["Cerfa 15692*01 et projet de vie", "Pièce d'identité, justificatif de domicile de moins de 3 mois", "Signaler l'urgence : procédure simplifiée"] },
+                        { titre: "Organiser un relais", texte: ["IDEL, CPTS, CMP ou DAC en attendant la décision"] },
+                        { vigilance: "Pas d'entrée en SAMSAH sans décision MDPH : ne pas retarder la sortie." }
+                    ]
+                },
+                "RAD_STANDARD": {
+                    "MÉDECIN": [
+                        { titre: "Préparer les documents", texte: ["Ordonnances de sortie", "Lettre de liaison", "Arrêt de travail et PMT si besoin"] },
+                        { titre: "Organiser le suivi", texte: ["Consultation ou examens de contrôle"] },
+                        { vigilance: "Lettre de liaison remise au patient et versée dans Orbis." }
+                    ],
+                    "IDE / CADRE": [
+                        { titre: "Préparer le départ", texte: ["Retirer les voies veineuses, vérifier les pansements", "Rendre traitements personnels, imagerie et effets"] },
+                        { vigilance: "Le patient a ses clés et une tenue adaptée." }
+                    ]
+                },
+                "LAM": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le volet médical ViaTrajectoire", texte: ["Pathologie lourde, chronique et invalidante", "Soins continus nécessaires"] },
+                        { titre: "Certifier", texte: ["Non-contagion et aptitude à la vie en collectivité", "Lettre de liaison complète"] },
+                        { vigilance: "Montrer pourquoi le 115 ou un LHSS ne suffisent pas." }
+                    ],
+                    "SERVICE SOCIAL / PASS": [
+                        { titre: "Créer le dossier et ouvrir les droits", texte: ["Dossier ViaTrajectoire et rapport social", "AME ou CSS et domiciliation, avec la PASS"] },
+                        { titre: "Suivre la demande", texte: ["Envoi automatique au GUR une fois les volets validés", "Dossier à actualiser tous les 3 mois", "Médicaments prévus pour le départ"] },
+                        { vigilance: "Sans ouverture de droits engagée, l'admission est mise en attente." }
+                    ]
+                },
+                "LHSS": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le dossier médical LHSS", texte: ["Soins légers et temporaires : convalescence, pansements, observance"] },
+                        { titre: "Certifier", texte: ["Non-contagion et vie en collectivité", "Autonomie : se lever, manger, se déplacer"] },
+                        { vigilance: "Patient grabataire ou dépendant pour la toilette : LAM ou SMR." }
+                    ],
+                    "SERVICE SOCIAL / PASS": [
+                        { titre: "Envoyer la demande", texte: ["Évaluation sociale", "Dossier complet aux structures LHSS ciblées", "AME ou CSS et domiciliation, avec la PASS"] },
+                        { titre: "Préparer le transfert", texte: ["Transport après l'accord de la structure", "Médicaments pour 48 à 72 h"] },
+                        { vigilance: "Un dossier LHSS envoyé au GUR n'est pas redirigé : vérifier la procédure avec la PASS." }
+                    ]
+                },
+                "ACT": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le volet médical ViaTrajectoire", texte: ["Pathologie chronique stabilisée : VIH, hépatite, cancer, insuffisance d'organe", "Besoin de coordination médico-psycho-sociale"] },
+                        { vigilance: "Patient stabilisé et autonome en appartement : pas d'infirmier 24 h/24." }
+                    ],
+                    "SERVICE SOCIAL / PASS": [
+                        { titre: "Remplir le volet social", texte: ["Situation sociale et projet d'insertion", "Droits ouverts : AME ou CSS"] },
+                        { vigilance: "Attente longue : envisager un LHSS en relais." }
+                    ]
+                },
+                "SIAO": {
+                    "MÉDECIN": [
+                        { titre: "Confirmer la fin des soins hospitaliers", texte: ["Soins infirmiers possibles via IDEL ou ESSIP"] },
+                        { titre: "Remettre les documents", texte: ["Ordonnances, dont soins infirmiers si besoin", "Lettre de liaison"] },
+                        { vigilance: "LHSS seulement si convalescence ou soins impossibles en hébergement social." }
+                    ],
+                    "SERVICE SOCIAL / PASS": [
+                        { titre: "Saisir le SI-SIAO tôt", texte: ["Diagnostic social dès le début du séjour", "Demande d'hébergement sur SI-SIAO"] },
+                        { titre: "Relais PASS", texte: ["Sans couverture : rendez-vous à la PASS ambulatoire (médicaments, AME / CSS)"] },
+                        { vigilance: "Ne jamais attendre le jour de la sortie pour saisir le SI-SIAO." }
+                    ]
+                },
+                "USPC": {
+                    "MÉDECIN": [
+                        { titre: "Constituer le dossier", texte: ["État neurologique consolidé (EVC / EPR) ou ventilation invasive chronique", "Lettre de liaison complète"] },
+                        { titre: "Contacter l'unité", texte: ["Médecin coordonnateur de l'USPC ciblée"] },
+                        { vigilance: "Bilan stabilisé et niveau d'engagement thérapeutique tracé." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Protéger si besoin", texte: ["Patient hors d'état de s'exprimer : tutelle ou habilitation familiale ?", "Sinon : requête au juge (Cerfa 15891*03)"] },
+                        { titre: "Vérifier les droits", texte: ["ALD à 100 % et mutuelle (forfait journalier)"] },
+                        { vigilance: "Requête au juge à envoyer dès la première semaine." }
+                    ]
+                },
+                "MAS": {
+                    "MÉDECIN": [
+                        { titre: "Remplir les dossiers", texte: ["Certificat MDPH (Cerfa 15695*01)", "Volet médical ViaTrajectoire Handicap", "Dépendance totale et soins constants"] },
+                        { vigilance: "Les soins constants distinguent la MAS du FAM." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Saisir la MDPH", texte: ["Cerfa 15692*01 en urgence", "Puis recherche de place sur ViaTrajectoire"] },
+                        { titre: "Sécuriser", texte: ["Protection juridique si besoin (Cerfa 15891*03)", "CSS ou mutuelle (forfait journalier)"] },
+                        { vigilance: "Vérifier tout de suite si une décision MDPH existe déjà." }
+                    ]
+                },
+                "FAM": {
+                    "MÉDECIN": [
+                        { titre: "Remplir les dossiers", texte: ["Certificat MDPH et volet ViaTrajectoire Handicap", "Aide d'un tiers, suivi régulier, sans soins lourds continus"] },
+                        { vigilance: "Joindre la lettre de liaison et le bilan d'autonomie." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Saisir la MDPH", texte: ["Cerfa 15692*01", "Suivi des candidatures sur ViaTrajectoire"] },
+                        { titre: "Anticiper le financement", texte: ["Aide sociale à l'hébergement si ressources insuffisantes", "Protection juridique si besoin"] },
+                        { vigilance: "Financement et protection préparés dès le départ, pour ne pas bloquer l'entrée." }
+                    ]
+                },
+                "USLD": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le dossier ViaTrajectoire", texte: ["Dossier national (Cerfa 14732*03) et grille AGGIR", "Profil SMTI : instabilité, surveillance continue"] },
+                        { vigilance: "Patient stabilisé : la commission réoriente vers l'EHPAD." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Préparer le financement", texte: ["Budget avec la famille", "Aide sociale (ASH) si ressources insuffisantes"] },
+                        { titre: "Recueillir le consentement", texte: ["Accord signé du patient", "Sinon : requête au juge (Cerfa 15891*03)"] },
+                        { vigilance: "Annoncer le coût dès l'ouverture du dossier : beaucoup de familles l'ignorent." }
+                    ]
+                },
+                "CRT": {
+                    "MÉDECIN": [
+                        { titre: "Évaluer", texte: ["Grille AGGIR : GIR 1 à 4", "Patient stabilisé, qui souhaite rester chez lui"] },
+                        { titre: "Transmettre", texte: ["Fiche de liaison : état cognitif, risques de chute et de dénutrition", "Soins infirmiers et aides techniques"] },
+                        { vigilance: "Pour un domicile trop fragile sans coordination intensive." }
+                    ],
+                    "SERVICE SOCIAL / CADRE": [
+                        { titre: "Saisir le CRT du secteur", texte: ["Évaluation avec le patient et l'aidant"] },
+                        { titre: "Articuler avec l'APA", texte: ["Demande d'APA (Cerfa 16301*01) en parallèle"] },
+                        { vigilance: "Adhésion du patient et implication de l'aidant indispensables." }
+                    ]
+                },
+                "ACCUEIL_JOUR": {
+                    "MÉDECIN": [
+                        { titre: "Rédiger un courrier", texte: ["Diagnostic neurocognitif", "Intérêt d'une stimulation 1 à 3 jours par semaine", "Grille AGGIR"] },
+                        { vigilance: "Troubles du comportement aigus : incompatibles avec un accueil collectif." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Contacter l'accueil de jour", texte: ["Le plus proche du domicile", "Visite de pré-admission avec la famille"] },
+                        { titre: "Financer", texte: ["Journées et transport dans le plan d'aide APA"] }
+                    ]
+                },
+                "MAISON_REPIT": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le dossier ViaTrajectoire", texte: ["Dossier national (Cerfa 14732*03) et grille AGGIR", "Mode « Hébergement temporaire »"] },
+                        { vigilance: "Le répit ne remplace pas une rééducation en SMR." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Trouver une place", texte: ["Places d'hébergement temporaire en sortie d'hospitalisation en priorité", "Reste à charge validé avec la famille"] },
+                        { titre: "Fixer l'objectif de sortie", texte: ["Retour à domicile renforcé ou demande d'EHPAD, écrit dès l'admission"] }
+                    ]
+                },
+                "GERONTO_EHPAD": {
+                    "MÉDECIN": [
+                        { titre: "Remplir le dossier ViaTrajectoire", texte: ["Dossier national (Cerfa 14732*03) et grille AGGIR"] },
+                        { titre: "Signaler les troubles", texte: ["Déambulation, risque de fugue, troubles du comportement", "Pour cibler le bon secteur : ouvert, unité protégée, UHR"] },
+                        { vigilance: "Risque de fugue non signalé : refus le jour de l'entrée." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Recueillir le consentement", texte: ["Accord écrit du patient", "Sinon : requête au juge (Cerfa 15891*03)"] },
+                        { titre: "Préparer le financement", texte: ["Budget avec la famille", "Aide sociale (ASH) et obligés alimentaires si besoin"] },
+                        { vigilance: "ASH : 1 à 2 mois d'instruction, demander les justificatifs dans les 48 h." }
+                    ],
+                    "IDE / CADRE": [
+                        { titre: "Préparer le transfert", texte: ["Fiche de liaison : habitudes, textures, continence, peau", "Ordonnances et PMT"] },
+                        { vigilance: "Prothèses, lunettes, papiers et trousseau partent avec le patient." }
+                    ]
+                },
+                "RESIDENCE_AUTONOMIE": {
+                    "MÉDECIN": [
+                        { titre: "Évaluer l'autonomie", texte: ["Grille AGGIR : GIR 5 ou 6", "Certificat de non-contagion"] },
+                        { vigilance: "GIR 1 à 4 ou troubles cognitifs évolutifs : domicile renforcé ou EHPAD d'abord." }
+                    ],
+                    "SERVICE SOCIAL": [
+                        { titre: "Documenter le frein au retour", texte: ["Étage sans ascenseur, insalubrité, isolement, expulsion"] },
+                        { titre: "Envoyer la demande", texte: ["Dossier national sur ViaTrajectoire", "Contact direct avec les CCAS gestionnaires"] },
+                        { vigilance: "En attendant la commission : un hébergement chez un proche est-il possible ?" }
+                    ]
+                }
+            };
+
+            var miniQuizzes = {
+                "QUIZ_HAD_HDJ": {
+                    titre: "Assistant d'arbitrage : HAD vs HDJ",
+                    etapes: {
+                        "q1": {
+                            question: "Le patient a-t-il besoin de soins techniques quotidiens ou continus à domicile (IV, nutrition parentérale, TPN / VAC, soins palliatifs) ?",
+                            options: [
+                                { texte: "Oui, chaque jour ou en continu", cible: "res_had", labelBouton: "Voir la démarche HAD →", resultat: "<b>HAD :</b> hospitalisation au domicile, matériel livré avant la sortie." },
+                                { texte: "Non, seulement des venues ponctuelles à l'hôpital (bilan, transfusion, cure)", cible: "res_hdj", labelBouton: "Voir la démarche HDJ →", resultat: "<b>HDJ :</b> retour à domicile et venue programmée à la journée." }
+                            ]
+                        }
+                    }
+                },
+                "QUIZ_VILLE_HOPITAL": {
+                    titre: "Assistant d'arbitrage : PRADO vs CPTS vs DAC",
+                    etapes: {
+                        "q1": {
+                            question: "1. Le patient est-il autonome, avec un besoin médical ciblé (insuffisance cardiaque, AVC, BPCO, chirurgie, 75 ans et plus) ?",
+                            options: [
+                                { texte: "Oui, sans complexité sociale", cible: "res_prado", labelBouton: "Voir la démarche PRADO →", resultat: "<b>PRADO :</b> le conseiller Assurance Maladie organise les rendez-vous en ville." },
+                                { texte: "Non, la situation est plus complexe", suivant: "q2" }
+                            ]
+                        },
+                        "q2": {
+                            question: "2. Manque-t-il seulement un professionnel de ville (médecin traitant, infirmier, kiné) ?",
+                            options: [
+                                { texte: "Oui, seulement un professionnel", cible: "res_cpts", labelBouton: "Voir la démarche CPTS →", resultat: "<b>CPTS :</b> trouve rapidement un professionnel près du domicile." },
+                                { texte: "Non, plusieurs difficultés se cumulent (isolement, refus d'aides, aidant épuisé, troubles cognitifs)", cible: "res_dac", labelBouton: "Voir la démarche DAC →", resultat: "<b>DAC :</b> coordination des parcours complexes, à tout âge." }
+                            ]
+                        }
+                    }
+                },
+                "QUIZ_PRECARITE": {
+                    titre: "Assistant d'arbitrage : LAM vs LHSS vs ACT vs SIAO",
+                    etapes: {
+                        "q1": {
+                            question: "1. À la sortie, le patient sans domicile a-t-il besoin de soins que l'hébergement social ne permet pas ?",
+                            options: [
+                                { texte: "Non : aucun soin, ou seulement des soins infirmiers", cible: "res_siao", labelBouton: "Voir la démarche SIAO →", resultat: "<b>SIAO / 115 :</b> hébergement social ; soins infirmiers possibles via une IDEL ou une ESSIP." },
+                                { texte: "Oui : soins médicaux, convalescence ou suivi rapproché", suivant: "q2" }
+                            ]
+                        },
+                        "q2": {
+                            question: "2. Quels soins sont nécessaires ?",
+                            options: [
+                                { texte: "Lourds et continus (pathologie chronique invalidante)", cible: "res_lam", labelBouton: "Voir la démarche LAM →", resultat: "<b>LAM :</b> structure médicalisée 24 h/24." },
+                                { texte: "Légers et temporaires (convalescence)", cible: "res_lhss", labelBouton: "Voir la démarche LHSS →", resultat: "<b>LHSS :</b> hébergement temporaire avec soins légers." },
+                                { texte: "Pathologie chronique stabilisée nécessitant un logement suivi (VIH, hépatite, cancer…)", cible: "res_act", labelBouton: "Voir la démarche ACT →", resultat: "<b>ACT :</b> appartement avec coordination médico-sociale." }
+                            ]
+                        }
+                    }
+                },
+                "QUIZ_HANDICAP": {
+                    titre: "Assistant d'arbitrage : USPC vs MAS vs FAM",
+                    etapes: {
+                        "q1": {
+                            question: "1. Le patient est-il en état végétatif ou pauci-relationnel, ou dépendant d'une ventilation lourde (trachéotomie) ?",
+                            options: [
+                                { texte: "Oui, soins hospitaliers prolongés et continus", cible: "res_uspc", labelBouton: "Voir la démarche USPC →", resultat: "<b>USPC :</b> unité hospitalière de soins prolongés complexes." },
+                                { texte: "Non, le patient est stabilisé", suivant: "q2" }
+                            ]
+                        },
+                        "q2": {
+                            question: "2. Quel est son niveau de dépendance (moins de 60 ans) ?",
+                            options: [
+                                { texte: "Totale, avec soins et surveillance médicale constants", cible: "res_mas", labelBouton: "Voir la démarche MAS →", resultat: "<b>MAS :</b> dépendance totale, sur décision MDPH." },
+                                { texte: "Partielle : aide d'un tiers et suivi médical régulier", cible: "res_fam", labelBouton: "Voir la démarche FAM →", resultat: "<b>FAM / EAM :</b> foyer médicalisé, sur décision MDPH." }
+                            ]
+                        }
+                    }
+                },
+                "QUIZ_GRAND_AGE_DOMICILE": {
+                    titre: "Assistant d'arbitrage : APA vs CRT vs Accueil de Jour vs Répit",
+                    etapes: {
+                        "q1": {
+                            question: "De quoi la personne âgée a-t-elle surtout besoin pour rentrer, puis rester, chez elle ?",
+                            options: [
+                                { texte: "Des heures d'aide au quotidien (lever, toilette, repas) — GIR 1 à 4", cible: "res_apa_saad", labelBouton: "Voir la démarche APA & SAD →", resultat: "<b>APA & SAD :</b> plan d'aide du Département, procédure d'urgence possible." },
+                                { texte: "Une coordination intensive, les aides classiques ne suffisant plus", cible: "res_crt", labelBouton: "Voir la démarche CRT (Volet 2) →", resultat: "<b>CRT Volet 2 :</b> accompagnement renforcé, alternative à l'EHPAD." },
+                                { texte: "Une stimulation en journée et du répit pour l'aidant, sans nuit", cible: "res_accueil_jour", labelBouton: "Voir la démarche Accueil de Jour →", resultat: "<b>Accueil de jour :</b> 1 à 3 jours par semaine, sans nuit." },
+                                { texte: "Un séjour temporaire avec nuits avant le retour", cible: "res_maison_repit", labelBouton: "Voir la démarche Répit / HT →", resultat: "<b>Répit / HT :</b> séjour temporaire, objectif de retour fixé dès l'admission." }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            var logigramme = {
+                "etape_1": {
+                    type: "question",
+                    texte: "Un Retour À Domicile (RAD) est-il possible, dans l'immédiat ou à terme ?",
+                    choix: [
+                        { label: "Oui, à court ou moyen terme", destination: "rad_oui_orientation", ariane: "RAD Possible" },
+                        { label: "Non, maintien à domicile impossible", destination: "rad_non_q1", ariane: "RAD Impossible" }
+                    ]
+                },
+                "rad_oui_orientation": {
+                    type: "question",
+                    texte: "Quelle est la modalité principale du retour à domicile pour ce patient ?",
+                    choix: [
+                        { label: "SMR / SSR — Rééducation préalable au RAD", destination: "res_ssr", ariane: "Rééducation SMR" },
+                        { label: "Hôtel Hospitalier — Hébergement temporaire", destination: "res_hotel_hosp", ariane: "Hôtel Hospitalier" },
+                        { label: "Grand Âge (60 ans et plus)", destination: "carrefour_grand_age_domicile", ariane: "Grand Âge" },
+                        { label: "Retour direct au domicile", destination: "rad_oui_q2", ariane: "RAD Direct" }
+                    ]
+                },
+                "rad_oui_q2": {
+                    type: "question",
+                    texte: "Le patient a-t-il besoin de soins techniques ou infirmiers à domicile ?",
+                    choix: [
+                        { label: "HAD / HDJ — Soins techniques hospitaliers", destination: "carrefour_had_hdj", ariane: "Soins techniques" },
+                        { label: "SSIAD / IDEL — Soins infirmiers de ville", destination: "res_ssiad", ariane: "Soins infirmiers de ville" },
+                        { label: "Non — Aucun soin technique ou infirmier", destination: "rad_oui_q3", ariane: "Sans soins infirmiers" }
+                    ]
+                },
+                "carrefour_had_hdj": {
+                    type: "question",
+                    texte: "Soins techniques hospitaliers : quel dispositif ?",
+                    quizId: "QUIZ_HAD_HDJ",
+                    choix: [
+                        { label: "HAD — Hospitalisation À Domicile", destination: "res_had", ariane: "HAD" },
+                        { label: "HDJ — Hôpital de Jour", destination: "res_hdj", ariane: "HDJ" }
+                    ]
+                },
+                "rad_oui_q3": {
+                    type: "question",
+                    texte: "Le patient nécessite-t-il un dispositif d'accompagnement pour le lien Ville-Hôpital ?",
+                    choix: [
+                        { label: "Oui — PRADO, CPTS ou DAC", destination: "carrefour_ville_hopital", ariane: "Lien Ville-Hôpital" },
+                        { label: "Non — Sans appui Ville-Hôpital", destination: "rad_oui_q4", ariane: "Sans appui" }
+                    ]
+                },
+                "carrefour_ville_hopital": {
+                    type: "question",
+                    texte: "Lien ville-hôpital : quel dispositif mobiliser ?",
+                    quizId: "QUIZ_VILLE_HOPITAL",
+                    choix: [
+                        { label: "PRADO — Suivi post-aigu Assurance Maladie", destination: "res_prado", ariane: "PRADO" },
+                        { label: "CPTS — Recherche de praticien en ville", destination: "res_cpts", ariane: "CPTS" },
+                        { label: "DAC — Dispositif d'Appui à la Coordination", destination: "res_dac", ariane: "DAC" }
+                    ]
+                },
+                "rad_oui_q4": {
+                    type: "question",
+                    texte: "Le patient a-t-il besoin d'aides humaines au quotidien (ménage, repas, aide à la toilette) ?",
+                    choix: [
+                        { label: "APA & SAD — 60 ans et plus", destination: "res_apa_saad", ariane: "APA & SAD" },
+                        { label: "PCH — Situation de handicap", destination: "res_pch", ariane: "PCH Handicap" },
+                        { label: "Non — Aucune aide humaine requise", destination: "rad_oui_q5", ariane: "Sans aides" }
+                    ]
+                },
+                "carrefour_grand_age_domicile": {
+                    type: "question",
+                    texte: "Grand âge à domicile (60 ans et plus) : quel dispositif ?",
+                    quizId: "QUIZ_GRAND_AGE_DOMICILE",
+                    choix: [
+                        { label: "APA & SAD — Aides humaines au quotidien", destination: "res_apa_saad", ariane: "APA & SAD" },
+                        { label: "CRT Volet 2 — Centre de Ressources Territorial", destination: "res_crt", ariane: "CRT Volet 2" },
+                        { label: "Accueil de Jour Gérontologique", destination: "res_accueil_jour", ariane: "Accueil de Jour" },
+                        { label: "Répit / HT — Séjour temporaire avant le retour", destination: "res_maison_repit", ariane: "Répit / HT" }
+                    ]
+                },
+                "rad_oui_q5": {
+                    type: "question",
+                    texte: "S'agit-il d'un adulte handicapé nécessitant un accompagnement médico-social spécifique à domicile ?",
+                    choix: [
+                        { label: "MDPH — Dossier AAH / SAMSAH", destination: "res_mdph_domicile", ariane: "MDPH Domicile" },
+                        { label: "RAD Simple — Patient autonome", destination: "res_rad_standard", ariane: "RAD Standard" }
+                    ]
+                },
+                "rad_non_q1": {
+                    type: "question",
+                    texte: "Quel est le profil principal expliquant l'impossibilité du maintien à domicile ?",
+                    choix: [
+                        { label: "Grande précarité / Sans Domicile Fixe", destination: "carrefour_precarite", ariane: "Patient SDF" },
+                        { label: "Handicap grande dépendance — Moins de 60 ans", destination: "carrefour_handicap", ariane: "Handicap (< 60 ans)" },
+                        { label: "Personne âgée — 60 ans et plus", destination: "rad_non_age_soins", ariane: "Patient ≥ 60 ans" }
+                    ]
+                },
+                "carrefour_precarite": {
+                    type: "question",
+                    texte: "Précarité / sans domicile : quelle structure, selon le besoin de soins ?",
+                    quizId: "QUIZ_PRECARITE",
+                    choix: [
+                        { label: "LAM — Lits d'Accueil Médicalisés", destination: "res_lam", ariane: "LAM" },
+                        { label: "LHSS — Lits Halte Soins Santé", destination: "res_lhss", ariane: "LHSS" },
+                        { label: "ACT — Appartements de Coordination Thérapeutique", destination: "res_act", ariane: "ACT" },
+                        { label: "SIAO / 115 — Hébergement social", destination: "res_siao", ariane: "SIAO / 115" }
+                    ]
+                },
+                "carrefour_handicap": {
+                    type: "question",
+                    texte: "Handicap grande dépendance : quelle structure ?",
+                    quizId: "QUIZ_HANDICAP",
+                    choix: [
+                        { label: "USPC — Unité de Soins Prolongés Complexes", destination: "res_uspc", ariane: "USPC" },
+                        { label: "MAS — Maison d'Accueil Spécialisée", destination: "res_mas", ariane: "MAS" },
+                        { label: "FAM / EAM — Foyer d'Accueil Médicalisé", destination: "res_fam", ariane: "FAM / EAM" }
+                    ]
+                },
+                "rad_non_age_soins": {
+                    type: "question",
+                    texte: "Quel est le niveau de soins et de dépendance de la personne âgée (60 ans et plus) ?",
+                    choix: [
+                        { label: "USLD — Unité de Soins de Longue Durée", destination: "res_usld", ariane: "USLD" },
+                        { label: "EHPAD — Hébergement permanent (GIR 1 à 4)", destination: "res_ehpad", ariane: "EHPAD" },
+                        { label: "Résidence Autonomie — Patient GIR 5 ou 6", destination: "res_residence_autonomie", ariane: "Résidence Autonomie" }
+                    ]
+                },
+                "res_ssr": {
+                    type: "resultat",
+                    titre: "Orientation SMR / SSR (Soins Médicaux et de Réadaptation)",
+                    details: "Transfert en Soins Médicaux et de Réadaptation pour rééducation et préparation du retour à domicile.",
+                    alerteDelai: { niveau: "warn", badge: "Délai : 3 à 5 jours", texte: "Porteur BMR / BHRe : 1 à 2 mois, admission difficile. Hémodialyse : 8 à 12 jours." },
+                    pedagogie: { titre: "Points bloquants", points: [
+                        "Nutrition parentérale : incompatible, sevrer de toute sonde avant",
+                        "Forfait journalier de 23 € par jour : facturé si pas de mutuelle (AME non concernée)",
+                        "Écouvillon BMR / BHRe de moins de 7 jours"
+                    ] },
+                    formulairesKey: "SMR_TRANSFERT",
+                    checklistKey: "SMR"
+                },
+                "res_hotel_hosp": {
+                    type: "resultat",
+                    titre: "Orientation : Hôtel Hospitalier",
+                    details: "Hébergement non médicalisé près de l'hôpital, avant ou après un séjour ou une séance de soins.",
+                    alerteDelai: { niveau: "info", badge: "Mise en place : 24h", texte: "Sur prescription médicale interne." },
+                    pedagogie: { titre: "Critères d'éligibilité", points: [
+                        "Patient autonome, ou accompagné d'un proche valide",
+                        "Aucun soin ni surveillance la nuit",
+                        "Domicile à plus d'1 h, logement inadapté ou isolement",
+                        "3 nuits consécutives max, 21 nuits au total (sans limite pour chimiothérapie et radiothérapie)"
+                    ] },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "HOTEL_HOSP"
+                },
+                "res_had": {
+                    type: "resultat",
+                    titre: "Orientation : HAD (Hospitalisation À Domicile)",
+                    details: "Soins techniques lourds ou continus au domicile : antibiothérapie IV, nutrition parentérale, pansements TPN / VAC, soins palliatifs.",
+                    alerteDelai: { niveau: "warn", badge: "Délai : 48 à 72 h ouvrées", texte: "Le temps de l'évaluation au lit et de la livraison du matériel." },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "HAD"
+                },
+                "res_hdj": {
+                    type: "resultat",
+                    titre: "Orientation : HDJ (Hôpital de Jour — Suivi Séquentiel)",
+                    details: "Retour à domicile avec une venue programmée à la journée : bilan, transfusion, cure ou réévaluation.",
+                    alerteDelai: { niveau: "info", badge: "Programmation : 24 à 48 h", texte: "Date de venue et bon de transport remis avant le départ." },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "HDJ"
+                },
+                "res_ssiad": {
+                    type: "resultat",
+                    titre: "Orientation : SSIAD (Service de Soins Infirmiers À Domicile) ou IDEL",
+                    details: "Soins infirmiers et nursing à domicile, par un SSIAD ou un cabinet infirmier libéral (IDEL).",
+                    alerteDelai: { niveau: "info", badge: "IDEL : 24 à 48 h / SSIAD : 3 à 7 jours", texte: "SSIAD selon les places disponibles sur la commune." },
+                    formulairesKey: "SSIAD_DOMICILE",
+                    checklistKey: "SSIAD_IDEL"
+                },
+                "res_prado": {
+                    type: "resultat",
+                    titre: "Accompagnement Ville-Hôpital : Dispositif PRADO (Assurance Maladie)",
+                    details: "Programme de l'Assurance Maladie qui organise les premiers rendez-vous en ville après la sortie.",
+                    alerteDelai: { niveau: "info", badge: "À lancer 48 h avant la sortie", texte: "Demande sur ViaTrajectoire uniquement, validée par le médecin." },
+                    pedagogie: { titre: "Patients éligibles", points: [
+                        "Insuffisance cardiaque, AVC, BPCO",
+                        "Suites de chirurgie, maternité",
+                        "Personnes de 75 ans et plus",
+                        "Patient autonome, sans complexité sociale"
+                    ] },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "PRADO"
+                },
+                "res_cpts": {
+                    type: "resultat",
+                    titre: "Accompagnement Ville-Hôpital : Saisine des CPTS de Proximité",
+                    details: "Réseau des professionnels de santé de la commune, mobilisé pour trouver un médecin traitant, un infirmier ou un kiné.",
+                    alerteDelai: { niveau: "info", badge: "Réponse : 24 à 48 h", texte: "" },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "CPTS"
+                },
+                "res_dac": {
+                    type: "resultat",
+                    titre: "Accompagnement Complexe : DAC (Dispositif d'Appui à la Coordination)",
+                    details: "Guichet unique pour les parcours de santé complexes, sans condition d'âge.",
+                    alerteDelai: { niveau: "warn", badge: "Coordination : 48 à 72 h ouvrées", texte: "Réservé aux cumuls de difficultés : isolement, refus d'aides, aidant épuisé, réhospitalisations." },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "DAC"
+                },
+                "res_apa_saad": {
+                    type: "resultat",
+                    titre: "Aides au quotidien (60 ans et plus) : APA & SAD (Service Autonomie à Domicile)",
+                    details: "Heures d'aide à domicile (toilette, repas, ménage) financées par l'APA du Département.",
+                    alerteDelai: { niveau: "urgent", badge: "~15 jours en urgence / 2 mois en standard", texte: "En urgence attestée, l'APA peut être versée à titre provisoire dès le dépôt (art. L232-12 du CASF)." },
+                    pedagogie: { titre: "Conditions", points: [
+                        "60 ans et plus",
+                        "GIR 1 à 4 (GIR 5 ou 6 : aides des caisses de retraite)"
+                    ] },
+                    formulairesKey: "APA_DOMICILE",
+                    checklistKey: "APA_SAAD"
+                },
+                "res_pch": {
+                    type: "resultat",
+                    titre: "Aides au quotidien (Patient Handicapé) : PCH",
+                    details: "Prestation de la MDPH qui finance les aides humaines ou techniques à domicile.",
+                    alerteDelai: { niveau: "urgent", badge: "15 jours ouvrés en urgence / 4 mois", texte: "Procédure d'urgence : décision provisoire du Département (art. R245-36 du CASF)." },
+                    pedagogie: { titre: "Conditions d'âge", points: [
+                        "Demande en principe avant 60 ans",
+                        "Après 60 ans : possible si le handicap existait avant 60 ans, ou si la personne travaille encore"
+                    ] },
+                    formulairesKey: "MDPH_COMPLET",
+                    checklistKey: "PCH_HANDICAP"
+                },
+                "res_mdph_domicile": {
+                    type: "resultat",
+                    titre: "Accompagnement Adulte Handicapé : Dossier MDPH (AAH / SAMSAH)",
+                    details: "Dossier MDPH pour l'AAH et/ou un accompagnement à domicile par un SAMSAH.",
+                    alerteDelai: { niveau: "urgent", badge: "Délai légal : 4 mois", texte: "Prévoir un relais transitoire (IDEL, CPTS, DAC) pour la sortie." },
+                    formulairesKey: "MDPH_COMPLET",
+                    checklistKey: "MDPH_DOMICILE"
+                },
+                "res_rad_standard": {
+                    type: "resultat",
+                    titre: "Retour à Domicile Simple (Patient Autonome)",
+                    details: "Patient autonome, sans aide ni dispositif : sécuriser les essentiels du départ.",
+                    alerteDelai: { niveau: "info", badge: "Sortie sous 24 h", texte: "" },
+                    formulairesKey: "TRANSPORT_SANITAIRE",
+                    checklistKey: "RAD_STANDARD"
+                },
+                "res_lam": {
+                    type: "resultat",
+                    titre: "Orientation Précarité & Soins Complexes : LAM (Lits d'Accueil Médicalisés)",
+                    details: "Hébergement médicalisé pour personnes sans domicile atteintes d'une pathologie lourde et chronique.",
+                    alerteDelai: { niveau: "urgent", badge: "Délai indicatif : 15 à 30 jours", texte: "Île-de-France : demande sur ViaTrajectoire, instruite par le Guichet Unique Régional (GUR)." },
+                    formulairesKey: "PRECARITE_DROITS",
+                    checklistKey: "LAM"
+                },
+                "res_lhss": {
+                    type: "resultat",
+                    titre: "Orientation Précarité & Soins Légers : LHSS (Lits Halte Soins Santé)",
+                    details: "Hébergement temporaire pour personnes sans domicile qui ont besoin de soins légers.",
+                    alerteDelai: { niveau: "warn", badge: "Délai indicatif : 7 à 14 jours", texte: "Demande envoyée directement aux structures LHSS (pas encore via le GUR)." },
+                    formulairesKey: "PRECARITE_DROITS",
+                    checklistKey: "LHSS"
+                },
+                "res_act": {
+                    type: "resultat",
+                    titre: "Orientation Précarité & Pathologie Chronique : ACT (Appartements de Coordination Thérapeutique)",
+                    details: "Appartement temporaire avec suivi médico-social, pour une pathologie chronique sévère et stabilisée.",
+                    alerteDelai: { niveau: "warn", badge: "Délai : variable", texte: "Île-de-France : demande sur ViaTrajectoire, régulée par le GUR ; dossier à actualiser tous les 3 mois." },
+                    formulairesKey: "PRECARITE_DROITS",
+                    checklistKey: "ACT"
+                },
+                "res_siao": {
+                    type: "resultat",
+                    titre: "Orientation Précarité & Hébergement Social : SIAO / 115",
+                    details: "Hébergement social d'urgence ou d'insertion, pour un patient qui n'a plus besoin de soins hospitaliers.",
+                    alerteDelai: { niveau: "warn", badge: "Délai : variable", texte: "Évaluation sociale à envoyer sur SI-SIAO avant la sortie médicale." },
+                    pedagogie: { titre: "Bon à savoir", points: [
+                        "Les soins infirmiers sont compatibles avec le SIAO / 115",
+                        "Ils sont assurés par une IDEL ou une ESSIP, sur prescription"
+                    ] },
+                    formulairesKey: "PRECARITE_DROITS",
+                    checklistKey: "SIAO"
+                },
+                "res_uspc": {
+                    type: "resultat",
+                    titre: "Orientation Handicap / Soins Lourds : USPC (Unité de Soins Prolongés Complexes)",
+                    details: "Unité hospitalière pour patients en état végétatif ou pauci-relationnel, ou dépendants d'une ventilation.",
+                    alerteDelai: { niveau: "urgent", badge: "Délai : 21 à 45 jours et plus", texte: "Admission sur dossier, après validation collégiale." },
+                    formulairesKey: "USPC_PROTECTION",
+                    checklistKey: "USPC"
+                },
+                "res_mas": {
+                    type: "resultat",
+                    titre: "Orientation Handicap Grande Dépendance : MAS (Maison d'Accueil Spécialisée)",
+                    details: "Établissement pour adultes totalement dépendants, avec soins et surveillance médicale constants.",
+                    alerteDelai: { niveau: "urgent", badge: "Délai : 1 à 4 mois et plus", texte: "Décision d'orientation MAS de la MDPH (CDAPH) obligatoire." },
+                    formulairesKey: "MDPH_COMPLET",
+                    checklistKey: "MAS"
+                },
+                "res_fam": {
+                    type: "resultat",
+                    titre: "Orientation Handicap : FAM / EAM (Foyer d'Accueil Médicalisé)",
+                    details: "Foyer médicalisé pour adultes handicapés qui ont besoin d'un tiers et d'un suivi médical régulier.",
+                    alerteDelai: { niveau: "urgent", badge: "Délai : 1 à 4 mois et plus", texte: "Décision d'orientation FAM / EAM de la MDPH (CDAPH) obligatoire." },
+                    formulairesKey: "MDPH_COMPLET",
+                    checklistKey: "FAM"
+                },
+                "res_usld": {
+                    type: "resultat",
+                    titre: "Orientation Gériatrique Soins Importants : USLD (Sanitaire)",
+                    details: "Long séjour hospitalier pour les 60 ans et plus, aux pathologies instables nécessitant une surveillance médicale continue (profil SMTI).",
+                    alerteDelai: { niveau: "urgent", badge: "Délai : 15 à 30 jours", texte: "Séjour payant : environ 2 200 à 3 200 € par mois." },
+                    formulairesKey: "EHPAD_USLD_JCP",
+                    checklistKey: "USLD"
+                },
+                "res_crt": {
+                    type: "resultat",
+                    titre: "Maintien à Domicile Renforcé (GIR 1 à 4) : CRT — Volet 2 (Centre de Ressources Territorial)",
+                    details: "Accompagnement renforcé à domicile, alternative à l'EHPAD pour une personne âgée dépendante (GIR 1 à 4).",
+                    alerteDelai: { niveau: "info", badge: "Évaluation : 48 à 72 h ouvrées", texte: "" },
+                    formulairesKey: "APA_DOMICILE",
+                    checklistKey: "CRT"
+                },
+                "res_accueil_jour": {
+                    type: "resultat",
+                    titre: "Maintien à Domicile & Répit : Accueil de Jour Gérontologique",
+                    details: "Accueil à la journée, sans nuit, pour stimuler la personne âgée et soulager l'aidant.",
+                    alerteDelai: { niveau: "info", badge: "Mise en place : 5 à 10 jours", texte: "Ne bloque pas la sortie : le patient rentre pendant l'inscription." },
+                    formulairesKey: "APA_DOMICILE",
+                    checklistKey: "ACCUEIL_JOUR"
+                },
+                "res_maison_repit": {
+                    type: "resultat",
+                    titre: "Séjour Temporaire Grand Âge : Maison de Vie et de Répit & Hébergement Temporaire",
+                    details: "Séjour temporaire avec nuits, pour une transition après l'hôpital ou le répit d'un aidant épuisé.",
+                    alerteDelai: { niveau: "warn", badge: "Délai : 7 à 15 jours", texte: "" },
+                    pedagogie: { titre: "Bon à savoir", points: [
+                        "Maison de Vie et de Répit si le territoire en dispose",
+                        "Sinon : hébergement temporaire en EHPAD, 90 jours par an au plus",
+                        "En sortie d'hospitalisation : 30 jours au plus à 23 € par jour, dans les EHPAD participants"
+                    ] },
+                    formulairesKey: "EHPAD_USLD_JCP",
+                    checklistKey: "MAISON_REPIT"
+                },
+                "res_ehpad": {
+                    type: "resultat",
+                    titre: "Orientation Gériatrique : EHPAD (Hébergement Permanent)",
+                    details: "Hébergement permanent, en dernier recours, quand le domicile n'est plus sécurisable.",
+                    alerteDelai: { niveau: "urgent", badge: "Délai : 7 à 15 j (privé) / 1 à 2 mois (habilité ASH)", texte: "Anticiper la protection juridique en cas de troubles cognitifs." },
+                    pedagogie: { titre: "Avant toute demande", points: [
+                        "Le maintien à domicile renforcé a-t-il été envisagé ? (branche Grand Âge)",
+                        "En attendant une place : hébergement temporaire, même dossier",
+                        "En sortie d'hospitalisation : 30 jours au plus à 23 € par jour, dans les EHPAD participants"
+                    ] },
+                    formulairesKey: "EHPAD_USLD_JCP",
+                    checklistKey: "GERONTO_EHPAD"
+                },
+                "res_residence_autonomie": {
+                    type: "resultat",
+                    titre: "Patient Âgé Non Dépendant (GIR 5 ou 6) : Résidence Autonomie",
+                    details: "Logement non médicalisé pour personnes âgées autonomes (GIR 5 ou 6) qui ne peuvent plus rester chez elles.",
+                    alerteDelai: { niveau: "warn", badge: "Délai : 15 à 30 jours", texte: "Commissions d'admission périodiques." },
+                    pedagogie: { titre: "Avant toute demande", points: [
+                        "Le retour à domicile reste la règle",
+                        "Frein à documenter : logement inaccessible ou insalubre, isolement, expulsion",
+                        "Personnes plus dépendantes : quotas limités (GIR 1 à 3 : 15 % des places au plus)"
+                    ] },
+                    formulairesKey: "LOGEMENT_AUTONOMIE",
+                    checklistKey: "RESIDENCE_AUTONOMIE"
+                }
+            };
+
+            var traceNavigation = [];
+            var etapeCouranteId = "etape_1";
+            var voletDemarcheOuvert = false;
+            var premierRendu = true;
+            var sensNavigation = "initial";
+            var stageArea = document.getElementById("stage-area");
+            var widgetContainer = document.getElementById("intranet-widget");
+            var modeIntegre = (function() { try { return window.self !== window.top; } catch (e) { return true; } })();
+            if (modeIntegre && widgetContainer) widgetContainer.classList.add("is-embedded");
+
+            function echapperAttr(str) {
+                return String(str || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+            }
+
+            var SIGLES = {
+                "AAH": "Allocation aux Adultes Handicapés",
+                "ACT": "Appartements de Coordination Thérapeutique",
+                "AGGIR": "Autonomie Gérontologie Groupes Iso-Ressources (grille d'évaluation de la perte d'autonomie)",
+                "ALD": "Affection de Longue Durée",
+                "AME": "Aide Médicale de l'État",
+                "APA": "Allocation Personnalisée d'Autonomie",
+                "ARS": "Agence Régionale de Santé",
+                "ASH": "Aide Sociale à l'Hébergement",
+                "BHRe": "Bactérie Hautement Résistante émergente",
+                "BMR": "Bactérie Multi-Résistante",
+                "BPCO": "Bronchopneumopathie Chronique Obstructive",
+                "CAM": "Conseiller de l'Assurance Maladie",
+                "CASF": "Code de l'Action Sociale et des Familles",
+                "CCAS": "Centre Communal d'Action Sociale",
+                "CDAPH": "Commission des Droits et de l'Autonomie des Personnes Handicapées",
+                "CMP": "Centre Médico-Psychologique",
+                "CPTS": "Communauté Professionnelle Territoriale de Santé",
+                "CRH": "Compte-Rendu d'Hospitalisation",
+                "CRT": "Centre de Ressources Territorial",
+                "CSS": "Complémentaire Santé Solidaire",
+                "DAC": "Dispositif d'Appui à la Coordination",
+                "EAM": "Établissement d'Accueil Médicalisé (nouvelle appellation des FAM)",
+                "EHPAD": "Établissement d'Hébergement pour Personnes Âgées Dépendantes",
+                "EPR": "État Pauci-Relationnel",
+                "ESSIP": "Équipe Spécialisée de Soins Infirmiers Précarité",
+                "EVC": "État Végétatif Chronique",
+                "FAM": "Foyer d'Accueil Médicalisé",
+                "GIR": "Groupe Iso-Ressources : de 1 (très dépendant) à 6 (autonome)",
+                "HAD": "Hospitalisation À Domicile",
+                "HDJ": "Hôpital De Jour",
+                "HT": "Hébergement Temporaire",
+                "IDE": "Infirmier(ère) Diplômé(e) d'État",
+                "IDEC": "Infirmier(ère) Diplômé(e) d'État Coordinateur(trice)",
+                "IDEL": "Infirmier(ère) Diplômé(e) d'État Libéral(e)",
+                "JCP": "Juge des Contentieux de la Protection",
+                "LAM": "Lits d'Accueil Médicalisés",
+                "LHSS": "Lits Halte Soins Santé",
+                "MAS": "Maison d'Accueil Spécialisée",
+                "MDPH": "Maison Départementale des Personnes Handicapées",
+                "PAC": "Port-à-cath (chambre implantable)",
+                "PASA": "Pôle d'Activités et de Soins Adaptés",
+                "PASS": "Permanence d'Accès aux Soins de Santé",
+                "PCA": "Pompe d'analgésie contrôlée par le patient",
+                "PCH": "Prestation de Compensation du Handicap",
+                "PDS": "Personnes en Difficultés Spécifiques (module ViaTrajectoire)",
+                "PICC": "Cathéter central à insertion périphérique",
+                "PMT": "Prescription Médicale de Transport",
+                "PRADO": "Programme d'Accompagnement du Retour à Domicile (Assurance Maladie)",
+                "RAD": "Retour À Domicile",
+                "RIB": "Relevé d'Identité Bancaire",
+                "SAD": "Service Autonomie à Domicile (aide humaine au domicile)",
+                "SAMSAH": "Service d'Accompagnement Médico-Social pour Adultes Handicapés",
+                "SAVS": "Service d'Accompagnement à la Vie Sociale",
+                "SI-SIAO": "Plateforme informatique des services d'accueil et d'orientation",
+                "SIAO": "Service Intégré d'Accueil et d'Orientation",
+                "SMR": "Soins Médicaux et de Réadaptation (ex-SSR)",
+                "SMTI": "Soins Médicaux et Techniques Importants",
+                "SSIAD": "Service de Soins Infirmiers À Domicile (intégré progressivement aux SAD « aide et soins »)",
+                "SSR": "Soins de Suite et de Réadaptation (ancien nom des SMR)",
+                "TPN": "Traitement par Pression Négative",
+                "UHR": "Unité d'Hébergement Renforcée",
+                "URPS": "Union Régionale des Professionnels de Santé",
+                "USLD": "Unité de Soins de Longue Durée",
+                "USPC": "Unité de Soins Prolongés Complexes",
+                "VAC": "Thérapie par pression négative (Vacuum Assisted Closure)",
+                "VIH": "Virus de l'Immunodéficience Humaine",
+                "VNI": "Ventilation Non Invasive"
+            };
+
+            var motifSigles = new RegExp(
+                "(^|[^A-Za-z0-9À-ÿ-])(" +
+                Object.keys(SIGLES).sort(function(a, b) { return b.length - a.length; })
+                    .map(function(k) { return k.replace(/-/g, "\\-"); }).join("|") +
+                ")(?![A-Za-z0-9À-ÿ])", "g");
+
+            function annoterSigles(texte, dejaVus) {
+                dejaVus = dejaVus || {};
+                return String(texte || "").replace(motifSigles, function(m, avant, sigle) {
+                    if (dejaVus[sigle]) return m;
+                    dejaVus[sigle] = true;
+                    return avant + '<abbr title="' + echapperAttr(SIGLES[sigle]) + '">' + sigle + '</abbr>';
+                });
+            }
+
+            function afficherElem(id, visible, displayMode) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                if (visible) {
+                    el.classList.remove("hidden");
+                    el.style.display = displayMode || "block";
+                } else {
+                    el.classList.add("hidden");
+                    el.style.display = "none";
+                }
+            }
+
+            function etatHistorique() {
+                var base = {};
+                try {
+                    var actuel = window.history.state;
+                    if (actuel && typeof actuel === "object") {
+                        for (var k in actuel) {
+                            if (Object.prototype.hasOwnProperty.call(actuel, k)) base[k] = actuel[k];
+                        }
+                    }
+                } catch (e) {}
+                base[CLE_HISTORIQUE] = { etapeId: etapeCouranteId, trace: traceNavigation.slice() };
+                return base;
+            }
+
+            function siteActif() {
+                var cle = "";
+                try {
+                    var m = /[?&]site=([a-z0-9_-]+)/i.exec(window.location.search || "");
+                    if (m) cle = m[1].toLowerCase();
+                } catch (e) {}
+                if (!cle && widgetContainer) cle = (widgetContainer.getAttribute("data-site") || "").toLowerCase();
+                return sitesAPHP[cle] ? cle : configurationOutil.siteParDefaut;
+            }
+
+            function adressePageHote() {
+                if (!modeIntegre) return "";
+                try { return String(window.top.location.href); } catch (e) { return ""; }
+            }
+
+            function lireLienDirect() {
+                var source = "";
+                try { source = (window.location.hash || "") + "&" + (window.location.search || ""); } catch (e) {}
+                var hote = adressePageHote();
+                if (hote) source += "&" + hote.replace(/^[^?#]*/, "");
+                var m = /(?:^|[#&?])orientation=([a-z0-9_]+)/i.exec(source);
+                return (m && Object.prototype.hasOwnProperty.call(logigramme, m[1])) ? m[1] : null;
+            }
+
+            function construireLienDirect(id) {
+                var base = configurationOutil.urlOutil || adressePageHote() || String(window.location.href);
+                base = base.split("#")[0];
+                return base + "#orientation=" + encodeURIComponent(id);
+            }
+
+            function tracer(action, nom) {
+                var detail = { source: "aphp-orientation-sorties", action: action, nom: nom || "", site: siteActif(), version: VERSION_CONTENU };
+                try { widgetContainer.dispatchEvent(new CustomEvent("aphp-orientation", { bubbles: true, detail: detail })); } catch (e) {}
+                if (!configurationOutil.mesureAudience) return;
+                try {
+                    if (window._paq && typeof window._paq.push === "function") {
+                        window._paq.push(["trackEvent", "Orientation des sorties", action, nom || ""]);
+                    }
+                } catch (e) {}
+                try {
+                    if (window.parent && window.parent !== window) window.parent.postMessage(detail, "*");
+                } catch (e) {}
+            }
+
+            function genererSignalementHtml(donnee, idEtape) {
+                if (!configurationOutil.contactMiseAJour) return "";
+                var corps = "Fiche : " + donnee.titre + " (" + idEtape + ")\nSite : " + siteActif() + "\n" + VERSION_CONTENU +
+                    "\n\nÉvolution proposée :\n\n\n— Merci de ne saisir aucune donnée patient dans ce message.";
+                var href = "mailto:" + configurationOutil.contactMiseAJour +
+                    "?subject=" + encodeURIComponent("[Outil orientation des sorties] " + donnee.titre) +
+                    "&body=" + encodeURIComponent(corps);
+                return '<div class="feedback-row">Une information de cette fiche n\'est plus à jour ? ' +
+                    '<a href="' + echapperAttr(href) + '" target="_top" data-ouverture="page" class="feedback-link" data-action="signal">Signaler une évolution à la DOP</a></div>';
+            }
+
+            function defilerVers(elem, bloc) {
+                if (!elem) return;
+                if (!modeIntegre) { elem.scrollIntoView({ behavior: "smooth", block: bloc }); return; }
+                var rect = elem.getBoundingClientRect();
+                var cible = window.pageYOffset + rect.top - 8;
+                if (bloc === "nearest" && rect.top >= 0 && rect.bottom <= window.innerHeight) return;
+                if (bloc === "nearest" && rect.top >= 0) cible = window.pageYOffset + rect.bottom - window.innerHeight + 8;
+                try { window.scrollTo({ top: Math.max(0, cible), behavior: "smooth" }); } catch (e) { window.scrollTo(0, Math.max(0, cible)); }
+            }
+
+            function afficherSecoursLien(url) {
+                var bloc = document.getElementById("link-fallback");
+                var champ = document.getElementById("link-fallback-input");
+                if (!bloc || !champ) return;
+                champ.value = url;
+                bloc.classList.remove("hidden");
+                bloc.style.display = "block";
+                defilerVers(bloc, "nearest");
+                champ.focus();
+                champ.select();
+            }
+
+            function ouvrirLienIntegre(lien) {
+                var url = lien.href || lien.getAttribute("href");
+                var mode = lien.getAttribute("data-ouverture");
+                if (mode === "page") {
+                    try { window.top.location.href = url; return; } catch (e) {}
+                }
+                var fenetre = null;
+                try { fenetre = window.open(url, "_blank"); } catch (e) {}
+                if (fenetre) {
+                    try { fenetre.opener = null; } catch (e) {}
+                    return;
+                }
+                if (mode === "onglet") {
+                    try { window.top.location.href = url; return; } catch (e) {}
+                }
+                afficherSecoursLien(url);
+            }
+
+            function copierLienDirect(btn) {
+                var lien = construireLienDirect(etapeCouranteId);
+                var libelle = btn.textContent;
+                var confirmer = function() {
+                    btn.textContent = "Lien copié ✓";
+                    btn.classList.add("is-done");
+                    setTimeout(function() { btn.textContent = libelle; btn.classList.remove("is-done"); }, 2200);
+                };
+                var secours = function() {
+                    var zone = document.getElementById("copy-fallback");
+                    if (!zone) return;
+                    zone.value = lien;
+                    afficherElem("copy-fallback", true, "block");
+                    zone.focus();
+                    zone.select();
+                    try { if (document.execCommand("copy")) confirmer(); } catch (e) {}
+                };
+                try {
+                    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(lien).then(confirmer, secours);
+                    else secours();
+                } catch (e) { secours(); }
+                tracer("lien_copie", etapeCouranteId);
+            }
+
+            function pousserHistoriqueNavigateur() {
+                try {
+                    window.history.pushState(etatHistorique(), "");
+                } catch (e) {}
+            }
+
+            function reinitialiserParcours() {
+                sensNavigation = "back";
+                traceNavigation = [];
+                etapeCouranteId = "etape_1";
+                pousserHistoriqueNavigateur();
+                rendreEtape("etape_1");
+            }
+
+            function naviguerVers(idDestination, labelChoix) {
+                sensNavigation = "forward";
+                traceNavigation.push({
+                    id: etapeCouranteId,
+                    label: labelChoix || "Étape"
+                });
+                etapeCouranteId = idDestination;
+                pousserHistoriqueNavigateur();
+                rendreEtape(etapeCouranteId);
+            }
+
+            function sauterVersIndexAriane(indexCible) {
+                sensNavigation = "back";
+                if (indexCible < 0 || indexCible >= traceNavigation.length) return;
+                var cibleId = traceNavigation[indexCible].id;
+                traceNavigation = traceNavigation.slice(0, indexCible);
+                etapeCouranteId = cibleId;
+                pousserHistoriqueNavigateur();
+                rendreEtape(etapeCouranteId);
+            }
+
+            function retourEtapePrecedente() {
+                sensNavigation = "back";
+                if (traceNavigation.length === 0) return;
+                var precedent = traceNavigation.pop();
+                etapeCouranteId = precedent.id;
+                pousserHistoriqueNavigateur();
+                rendreEtape(etapeCouranteId);
+            }
+
+            function rendreFilAriane(donneeActuelle) {
+                var bar = document.getElementById("breadcrumb-bar");
+                if (traceNavigation.length === 0) {
+                    afficherElem("breadcrumb-bar", false);
+                    afficherElem("btn-reset-top", false);
+                    afficherElem("footer-nav", false);
+                    return;
+                }
+
+                afficherElem("breadcrumb-bar", true, "flex");
+                afficherElem("btn-reset-top", true, "inline-block");
+                afficherElem("footer-nav", true, "flex");
+
+                var html = "";
+                traceNavigation.forEach(function(step, idx) {
+                    var nomAffiche = step.label;
+                    html += '<button type="button" class="crumb-pill" data-action="crumb" data-index="' + idx + '">' + echapperAttr(nomAffiche) + '</button>';
+                    html += '<span class="crumb-sep" aria-hidden="true">›</span>';
+                });
+
+                var labelCourant = (donneeActuelle.type === "resultat")
+                    ? "Fiche Démarche"
+                    : ("Question " + (traceNavigation.length + 1));
+
+                html += '<span class="crumb-pill current" aria-current="step">' + labelCourant + '</span>';
+                bar.innerHTML = html;
+            }
+
+            function basculerVoletDemarche() {
+                voletDemarcheOuvert = !voletDemarcheOuvert;
+                var panel = document.getElementById("copilot-panel");
+                var btnHero = document.getElementById("btn-hero-demarche");
+                if (!panel) return;
+
+                if (voletDemarcheOuvert) {
+                    panel.classList.remove("hidden");
+                    panel.style.display = "block";
+                    widgetContainer.classList.add("with-copilot");
+                    if (btnHero) {
+                        btnHero.setAttribute("aria-expanded", "true");
+                        btnHero.classList.add("active");
+                        btnHero.textContent = "✕ Masquer le déroulement de la démarche";
+                    }
+                    if (window.innerWidth <= 1040) {
+                        setTimeout(function() {
+                            defilerVers(panel, "nearest");
+                        }, 60);
+                    }
+                } else {
+                    panel.classList.add("hidden");
+                    panel.style.display = "none";
+                    widgetContainer.classList.remove("with-copilot");
+                    if (btnHero) {
+                        btnHero.setAttribute("aria-expanded", "false");
+                        btnHero.classList.remove("active");
+                        btnHero.textContent = "▸ Afficher le déroulement de la démarche par métier";
+                    }
+                }
+            }
+
+            function basculerRoleDemarche(idx) {
+                var body = document.getElementById("role-body-" + idx);
+                var hdr = document.getElementById("role-hdr-" + idx);
+                var chev = document.getElementById("role-chev-" + idx);
+                if (!body || !hdr || !chev) return;
+
+                var isHidden = body.classList.contains("hidden");
+                if (isHidden) {
+                    body.classList.remove("hidden");
+                    hdr.classList.add("open");
+                    hdr.setAttribute("aria-expanded", "true");
+                    chev.textContent = "Masquer ▲";
+                } else {
+                    body.classList.add("hidden");
+                    hdr.classList.remove("open");
+                    hdr.setAttribute("aria-expanded", "false");
+                    chev.textContent = "Ouvrir ▼";
+                }
+            }
+
+            function toutDeplierReplierRoles() {
+                var bodies = widgetContainer.querySelectorAll(".role-accordion-body");
+                var allOpen = true;
+                bodies.forEach(function(b) {
+                    if (b.classList.contains("hidden")) allOpen = false;
+                });
+
+                bodies.forEach(function(b, idx) {
+                    var hdr = document.getElementById("role-hdr-" + idx);
+                    var chev = document.getElementById("role-chev-" + idx);
+                    if (allOpen) {
+                        b.classList.add("hidden");
+                        if (hdr) { hdr.classList.remove("open"); hdr.setAttribute("aria-expanded", "false"); }
+                        if (chev) chev.textContent = "Ouvrir ▼";
+                    } else {
+                        b.classList.remove("hidden");
+                        if (hdr) { hdr.classList.add("open"); hdr.setAttribute("aria-expanded", "true"); }
+                        if (chev) chev.textContent = "Masquer ▲";
+                    }
+                });
+
+                var btnAll = document.getElementById("btn-expand-all-roles");
+                if (btnAll) {
+                    btnAll.textContent = allOpen ? "Tout déplier" : "Tout replier";
+                }
+            }
+
+            function listeTirets(points, sigles, classe) {
+                return '<ul class="' + classe + '">' + points.map(function(pt) {
+                    return '<li>' + annoterSigles(pt, sigles) + '</li>';
+                }).join("") + '</ul>';
+            }
+
+            function genererVoletDemarcheHtml(donnee) {
+                var demarcheObj = donnee.checklistKey ? demarchesMetiers[donnee.checklistKey] : null;
+                var rolesHtml = "";
+
+                if (demarcheObj) {
+                    var roles = Object.keys(demarcheObj);
+                    rolesHtml = '<div class="copilot-sec-label">Déroulement opérationnel par métier :</div>' +
+                        '<div class="role-accordion-list">';
+
+                    roles.forEach(function(role, idx) {
+                        var items = demarcheObj[role];
+                        var siglesVus = {};
+                        var nbEtapes = items.filter(function(it) { return !it.vigilance; }).length;
+                        rolesHtml += '<div class="role-accordion-card">' +
+                            '<button type="button" id="role-hdr-' + idx + '" class="role-accordion-header" data-action="toggle-role" data-role-idx="' + idx + '" aria-expanded="false" aria-controls="role-body-' + idx + '">' +
+                                '<span class="role-header-title">' + role + '</span>' +
+                                '<div class="role-header-right">' +
+                                    '<span class="role-count-pill">' + nbEtapes + ' étape(s)</span>' +
+                                    '<span id="role-chev-' + idx + '" class="role-chevron">Ouvrir ▼</span>' +
+                                '</div>' +
+                            '</button>' +
+                            '<div id="role-body-' + idx + '" class="role-accordion-body hidden">';
+
+                        var numStep = 0;
+                        items.forEach(function(itemObj) {
+                            if (itemObj.vigilance) {
+                                rolesHtml += '<div class="role-vigilance-box">' +
+                                    '<span class="role-vigilance-label">Point critique & Relais</span>' +
+                                    '<span>' + annoterSigles(itemObj.vigilance, siglesVus) + '</span>' +
+                                '</div>';
+                            } else {
+                                numStep++;
+                                rolesHtml += '<div class="role-step-row">' +
+                                    '<span class="role-step-num">' + numStep + '</span>' +
+                                    '<div class="role-step-text">' +
+                                        (itemObj.titre ? '<span class="role-step-title">' + itemObj.titre + '</span>' : '') +
+                                        (Array.isArray(itemObj.texte)
+                                            ? listeTirets(itemObj.texte, siglesVus, "role-step-bullets")
+                                            : '<span>' + annoterSigles(itemObj.texte, siglesVus) + '</span>') +
+                                    '</div>' +
+                                '</div>';
+                            }
+                        });
+
+                        rolesHtml += '</div></div>';
+                    });
+                    rolesHtml += '</div>';
+                }
+
+                var cerfaNoticeHtml = "";
+                if (donnee.formulairesKey && catalogueFormulaires[donnee.formulairesKey]) {
+                    var listeCerfa = catalogueFormulaires[donnee.formulairesKey];
+                    cerfaNoticeHtml = '<div class="copilot-cerfa-box">' +
+                        '<div class="copilot-sec-label">Répartition & notice des formulaires CERFA (Cliquables) :</div>';
+
+                    listeCerfa.forEach(function(f) {
+                        cerfaNoticeHtml += '<a href="' + f.url + '" target="_blank" rel="noopener noreferrer" data-ouverture="onglet" class="copilot-cerfa-link-card" title="Ouvrir le formulaire officiel">' +
+                            '<div class="copilot-cerfa-top">' +
+                                '<span class="copilot-cerfa-name">' + f.code + ' — ' + f.titre + ' ↗</span>' +
+                                '<span class="copilot-cerfa-role">' + f.acteur + '</span>' +
+                            '</div>' +
+                            '<div class="copilot-cerfa-desc">' + f.desc + '</div>' +
+                        '</a>';
+                    });
+                    cerfaNoticeHtml += '</div>';
+                }
+
+                return '<aside id="copilot-panel" class="workspace-copilot hidden">' +
+                    '<div class="copilot-header">' +
+                        '<span class="copilot-title">Déroulement de la démarche</span>' +
+                        '<div class="copilot-header-actions">' +
+                            '<button type="button" id="btn-expand-all-roles" class="btn-copilot-small" data-action="expand-all-roles">Tout déplier</button>' +
+                            '<button type="button" class="btn-copilot-small" data-action="toggle-copilot">Fermer</button>' +
+                        '</div>' +
+                    '</div>' +
+                    rolesHtml +
+                    cerfaNoticeHtml +
+                '</aside>';
+            }
+
+            function basculerAssistantQuiz(quizId) {
+                var box = document.getElementById("quiz-box-container");
+                if (!box) return;
+                var declencheur = widgetContainer.querySelector(".btn-assistant-trigger");
+                if (box.classList.contains("hidden")) {
+                    afficherElem("quiz-box-container", true, "block");
+                    afficherQuestionAssistant(quizId, "q1");
+                    if (declencheur) declencheur.setAttribute("aria-expanded", "true");
+                    tracer("assistant_ouvert", quizId);
+                } else {
+                    afficherElem("quiz-box-container", false);
+                    if (declencheur) declencheur.setAttribute("aria-expanded", "false");
+                }
+            }
+
+            function afficherQuestionAssistant(quizId, keyEtape) {
+                var quiz = miniQuizzes[quizId];
+                var etape = quiz.etapes[keyEtape];
+                var body = document.getElementById("quiz-box-body");
+                if (!body) return;
+
+                var html = '<div class="quiz-q-text">' + etape.question + '</div><div class="quiz-opt-list">';
+                etape.options.forEach(function(opt, idx) {
+                    if (opt.suivant) {
+                        html += '<button type="button" class="quiz-opt-item" data-action="quiz-step" data-quiz="' + quizId + '" data-next="' + opt.suivant + '">' + opt.texte + '</button>';
+                    } else {
+                        html += '<button type="button" class="quiz-opt-item" data-action="quiz-verdict" data-quiz="' + quizId + '" data-step="' + keyEtape + '" data-opt="' + idx + '">' + opt.texte + '</button>';
+                    }
+                });
+                html += '</div>';
+                body.innerHTML = html;
+            }
+
+            function afficherVerdictAssistant(quizId, keyEtape, optIdx) {
+                var opt = miniQuizzes[quizId].etapes[keyEtape].options[optIdx];
+                var body = document.getElementById("quiz-box-body");
+                if (!body) return;
+
+                var safeAriane = echapperAttr(opt.labelBouton.replace("Voir la démarche ", "").replace(" →", ""));
+                tracer("assistant_verdict", quizId + " > " + opt.cible);
+                var html = '<div class="quiz-verdict-box">' + opt.resultat + '</div>' +
+                    '<div class="quiz-actions-row">' +
+                        '<button type="button" class="btn-quiz-go" data-action="choice" data-dest="' + opt.cible + '" data-ariane="' + safeAriane + '">' + opt.labelBouton + '</button>' +
+                        '<button type="button" class="btn-quiz-retry" data-action="quiz-step" data-quiz="' + quizId + '" data-next="q1">Revoir les questions</button>' +
+                    '</div>';
+                body.innerHTML = html;
+            }
+
+            function rendreEtape(idEtape) {
+                var donnee = logigramme[idEtape];
+                if (!donnee) return;
+
+                voletDemarcheOuvert = false;
+                widgetContainer.classList.remove("with-copilot");
+
+                rendreFilAriane(donnee);
+
+                stageArea.innerHTML = "";
+                afficherElem("copy-fallback", false);
+                tracer(donnee.type === "resultat" ? "fiche" : "etape", idEtape);
+                stageArea.classList.remove("anim-initial", "anim-forward", "anim-back");
+                void stageArea.offsetWidth;
+                stageArea.classList.add("anim-" + sensNavigation);
+
+                if (donnee.type === "question") {
+                    afficherElem("btn-print-memo", false);
+                    afficherElem("btn-copy-link", false);
+
+                    var numQuestion = traceNavigation.length + 1;
+                    var htmlQ = '<div class="question-stage">' +
+                        '<div class="step-kicker">Question ' + numQuestion + '</div>' +
+                        '<h2 class="question-heading" tabindex="-1">' + donnee.texte + '</h2>' +
+                        '<div class="choices-grid">';
+
+                    donnee.choix.forEach(function(c) {
+                        var labelAriane = echapperAttr(c.ariane || c.label);
+                        htmlQ += '<button type="button" class="choice-card" data-action="choice" data-dest="' + c.destination + '" data-ariane="' + labelAriane + '">' +
+                            '<span class="choice-card-label">' + c.label + '</span>' +
+                            '<span class="choice-card-arrow">→</span>' +
+                        '</button>';
+                    });
+                    htmlQ += '</div>';
+
+                    if (donnee.quizId && miniQuizzes[donnee.quizId]) {
+                        var qObj = miniQuizzes[donnee.quizId];
+                        htmlQ += '<div class="assistant-section">' +
+                            '<button type="button" class="btn-assistant-trigger" data-action="toggle-quiz" data-quiz="' + donnee.quizId + '" aria-expanded="false" aria-controls="quiz-box-container">' +
+                                'Hésitation sur le dispositif ? Utiliser l\'assistant d\'arbitrage en 2 clics' +
+                            '</button>' +
+                            '<div id="quiz-box-container" class="quiz-card hidden">' +
+                                '<div class="quiz-header">' +
+                                    '<span class="quiz-title">' + qObj.titre + '</span>' +
+                                    '<button type="button" class="quiz-close-btn" data-action="toggle-quiz" data-quiz="' + donnee.quizId + '">Fermer</button>' +
+                                '</div>' +
+                                '<div id="quiz-box-body"></div>' +
+                            '</div>' +
+                        '</div>';
+                    }
+
+                    htmlQ += '</div>';
+                    stageArea.innerHTML = htmlQ;
+
+                } else if (donnee.type === "resultat") {
+                    afficherElem("btn-print-memo", true, "inline-block");
+                    afficherElem("btn-copy-link", true, "inline-block");
+
+                    var delayLevel = (donnee.alerteDelai && donnee.alerteDelai.niveau) ? donnee.alerteDelai.niveau : "info";
+                    var delayBadgeHtml = donnee.alerteDelai
+                        ? ('<span class="delay-badge ' + delayLevel + '">' + donnee.alerteDelai.badge + '</span>')
+                        : '';
+                    var siglesHero = {};
+                    var resumeHtml = annoterSigles(donnee.details, siglesHero);
+                    var delayCalloutHtml = (donnee.alerteDelai && donnee.alerteDelai.texte)
+                        ? ('<div class="delay-callout"><b>Délai & anticipation :</b> ' + annoterSigles(donnee.alerteDelai.texte, siglesHero) + '</div>')
+                        : '';
+                    var pedagogieHtml = "";
+                    if (donnee.pedagogie && donnee.pedagogie.points) {
+                        pedagogieHtml = '<div class="pedagogie-callout"><h4>' + donnee.pedagogie.titre + '</h4>' +
+                            listeTirets(donnee.pedagogie.points, siglesHero, "key-points") + '</div>';
+                    } else if (donnee.pedagogie) {
+                        pedagogieHtml = '<div class="pedagogie-callout">' + donnee.pedagogie + '</div>';
+                    }
+
+                    var heroHtml = '<div class="bento-hero">' +
+                        '<div class="bento-hero-top">' +
+                            '<h2 class="bento-title" tabindex="-1">' + donnee.titre + '</h2>' +
+                            delayBadgeHtml +
+                        '</div>' +
+                        '<p class="bento-summary">' + resumeHtml + '</p>' +
+                        delayCalloutHtml +
+                        pedagogieHtml +
+                        '<div class="hero-demarche-cta-row">' +
+                            '<span class="hero-demarche-cta-hint">Consultez le détail des étapes pour chaque professionnel (Médecin, Service Social, IDE) :</span>' +
+                            '<button type="button" id="btn-hero-demarche" class="btn-hero-demarche" data-action="toggle-copilot" aria-expanded="false" aria-controls="copilot-panel">' +
+                                '▸ Afficher le déroulement de la démarche par métier' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+
+                    var cerfaBarHtml = "";
+                    if (donnee.formulairesKey && catalogueFormulaires[donnee.formulairesKey]) {
+                        var listeCerfa = catalogueFormulaires[donnee.formulairesKey];
+                        cerfaBarHtml = '<div class="cerfa-compact-bar">' +
+                            '<span class="cerfa-compact-label">Formulaires CERFA & Références :</span>' +
+                            '<div class="cerfa-pills-group">';
+
+                        listeCerfa.forEach(function(f) {
+                            cerfaBarHtml += '<a href="' + f.url + '" target="_blank" rel="noopener noreferrer" data-ouverture="onglet" class="cerfa-compact-pill">' +
+                                '<span class="cerfa-compact-code">' + f.code + '</span>' +
+                                '<span>' + f.titre + ' ↗</span>' +
+                            '</a>';
+                        });
+                        cerfaBarHtml += '</div></div>';
+                    }
+
+                    var route = routageIntranetAPHP[idEtape] || { page: "", section: "" };
+                    var pageInfo = pagesIntranetAPHP[route.page] || { titre: "Orientations et outils de sortie" };
+                    var site = sitesAPHP[siteActif()];
+                    var urlPasserelle = site.ancres[idEtape] || site.pages[route.page] || "#intranet";
+                    var descPasserelle = route.section
+                        ? 'Contacts et procédures de votre site : page « ' + pageInfo.titre + ' », section « ' + route.section + ' ».'
+                        : 'Contacts et procédures de votre site : page « ' + pageInfo.titre + ' ».';
+                    var gatewayHtml = '<div class="intranet-gateway-bar">' +
+                        '<div class="gateway-info">' +
+                            '<div class="gateway-label">Passerelle Intranet</div>' +
+                            '<p class="gateway-desc">' + echapperAttr(descPasserelle) + '</p>' +
+                        '</div>' +
+                        (urlPasserelle.charAt(0) === "#"
+                            ? '<span class="gateway-pending">Page Intranet « ' + pageInfo.titre + ' » en cours de création</span>'
+                            : '<a href="' + echapperAttr(urlPasserelle) + '" target="_top" data-ouverture="page" class="btn-gateway-primary" data-action="gateway" data-dest="' + idEtape + '">Accéder à la page Intranet « ' + pageInfo.titre + ' » →</a>') +
+                    '</div>';
+
+                    stageArea.innerHTML = '<div class="workspace-split">' +
+                        '<div class="workspace-main">' +
+                            heroHtml +
+                            cerfaBarHtml +
+                            gatewayHtml +
+                            genererSignalementHtml(donnee, idEtape) +
+                        '</div>' +
+                        genererVoletDemarcheHtml(donnee) +
+                    '</div>';
+                }
+
+                afficherElem("link-fallback", false);
+                if (!premierRendu) {
+                    var titre = stageArea.querySelector("h2");
+                    if (titre) {
+                        try { titre.focus({ preventScroll: true }); } catch (e) { titre.focus(); }
+                    }
+                    var haut = widgetContainer.getBoundingClientRect().top;
+                    if (haut < 0) defilerVers(widgetContainer, "start");
+                }
+                premierRendu = false;
+            }
+
+            widgetContainer.addEventListener("click", function(e) {
+                var lienExterne = e.target.closest("a[data-ouverture]");
+                if (lienExterne) {
+                    var actionLien = lienExterne.getAttribute("data-action");
+                    if (actionLien === "gateway") tracer("passerelle", lienExterne.getAttribute("data-dest"));
+                    else if (actionLien === "signal") tracer("signalement", etapeCouranteId);
+                    else tracer("cerfa", etapeCouranteId);
+                    if (modeIntegre) {
+                        e.preventDefault();
+                        ouvrirLienIntegre(lienExterne);
+                    }
+                    return;
+                }
+                var btn = e.target.closest("[data-action]");
+                if (!btn) return;
+                var action = btn.getAttribute("data-action");
+
+                if (action === "reset") {
+                    reinitialiserParcours();
+                } else if (action === "back") {
+                    retourEtapePrecedente();
+                } else if (action === "print") {
+                    tracer("impression", etapeCouranteId);
+                    window.print();
+                } else if (action === "copy-link") {
+                    copierLienDirect(btn);
+                } else if (action === "crumb") {
+                    sauterVersIndexAriane(parseInt(btn.getAttribute("data-index"), 10));
+                } else if (action === "choice") {
+                    naviguerVers(btn.getAttribute("data-dest"), btn.getAttribute("data-ariane"));
+                } else if (action === "toggle-quiz") {
+                    basculerAssistantQuiz(btn.getAttribute("data-quiz"));
+                } else if (action === "quiz-step") {
+                    afficherQuestionAssistant(btn.getAttribute("data-quiz"), btn.getAttribute("data-next"));
+                } else if (action === "quiz-verdict") {
+                    afficherVerdictAssistant(
+                        btn.getAttribute("data-quiz"),
+                        btn.getAttribute("data-step"),
+                        parseInt(btn.getAttribute("data-opt"), 10)
+                    );
+                } else if (action === "toggle-copilot") {
+                    basculerVoletDemarche();
+                } else if (action === "toggle-role") {
+                    basculerRoleDemarche(parseInt(btn.getAttribute("data-role-idx"), 10));
+                } else if (action === "expand-all-roles") {
+                    toutDeplierReplierRoles();
+                }
+            });
+
+            window.addEventListener("popstate", function(e) {
+                var etat = (e.state && e.state[CLE_HISTORIQUE]) ? e.state[CLE_HISTORIQUE] : null;
+                var longueurAvant = traceNavigation.length;
+                sensNavigation = (etat && Array.isArray(etat.trace) && etat.trace.length > longueurAvant) ? "forward" : "back";
+                if (etat && etat.etapeId && logigramme[etat.etapeId]) {
+                    etapeCouranteId = etat.etapeId;
+                    traceNavigation = Array.isArray(etat.trace) ? etat.trace.slice() : [];
+                } else {
+                    traceNavigation = [];
+                    etapeCouranteId = "etape_1";
+                }
+                rendreEtape(etapeCouranteId);
+            });
+
+            window.addEventListener("hashchange", function() {
+                var cible = lireLienDirect();
+                if (!cible || cible === etapeCouranteId) return;
+                sensNavigation = "forward";
+                traceNavigation = cible === "etape_1" ? [] : [{ id: "etape_1", label: "Lien direct" }];
+                etapeCouranteId = cible;
+                tracer("lien_direct", cible);
+                try { window.history.replaceState(etatHistorique(), "", String(window.location.href).split("#")[0]); } catch (e) {}
+                rendreEtape(etapeCouranteId);
+            });
+
+            var cibleInitiale = lireLienDirect();
+            if (cibleInitiale && cibleInitiale !== "etape_1") {
+                traceNavigation = [{ id: "etape_1", label: "Lien direct" }];
+                etapeCouranteId = cibleInitiale;
+                tracer("lien_direct", cibleInitiale);
+            }
+
+            try {
+                var urlPropre = cibleInitiale ? String(window.location.href).split("#")[0] : undefined;
+                window.history.replaceState(etatHistorique(), "", urlPropre);
+            } catch (e) {}
+
+            var versionEl = document.getElementById("content-version");
+            if (versionEl) versionEl.textContent = VERSION_CONTENU;
+
+            rendreEtape(etapeCouranteId);
+        })();
+    </script>
+</body>
+</html>
