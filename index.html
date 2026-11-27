@@ -1278,6 +1278,7 @@
                         Recommencer l'orientation
                     </button>
                 </div>
+            </div>
 
             <nav id="breadcrumb-bar" class="breadcrumb-bar hidden" aria-label="Fil d'Ariane"></nav>
         </div>
@@ -1285,6 +1286,16 @@
         <div id="stage-area"></div>
 
         <div id="footer-nav" class="footer-nav hidden">
+            <button type="button" id="btn-back" class="btn-nav-outline" data-action="back">
+                ← Étape précédente
+            </button>
+            <div class="footer-actions">
+                <button type="button" id="btn-print-memo" class="btn-nav-outline hidden" data-action="print">
+                    Imprimer ce mémo (A4)
+                </button>
+                <button type="button" class="btn-nav-outline" data-action="reset">
+                    Retour au début
+                </button>
             </div>
         </div>
         <input type="text" id="copy-fallback" class="copy-fallback hidden" readonly aria-label="Lien de la fiche à copier">
@@ -1307,12 +1318,13 @@
              * 4. mesureAudience : événements anonymes de consultation (aucune donnée patient) vers l'outil de mesure.
              * 5. urlOutil : adresse de la page Intranet qui affiche l'outil, utilisée pour les liens partagés
              *    (vide = adresse de la page détectée automatiquement).
-             * 7. Intégration SharePoint : publier ce fichier sous le nom index.html sur le site web de l'équipe, puis coller
-             *    dans le composant « Incorporer » : <iframe src="[adresse du site]?site=bichat" width="1200" height="1000"
+             * 6. Intégration SharePoint : publier ce fichier sous le nom index.html sur le site web de l'équipe, puis coller
+             *    dans le composant « Incorporer » : <iframe src="[adresse du site]?site=bichat&v=1" width="1900" height="900"
              *    title="Orientation des sorties"></iframe>. Ajouter #orientation=res_ehpad à la fin de l'adresse ouvre
              *    directement une fiche. Tant qu'une page Intranet garde son adresse provisoire (#intranet-…), le bouton
              *    de la passerelle est remplacé par la mention « page en cours de création ».
-             * 6. routageIntranetAPHP : "section" reprend exactement le titre de section de la page Intranet.
+             * 7. routageIntranetAPHP : "page" désigne l'une des quatre pages de pagesIntranetAPHP ; "section" reprend
+             *    exactement le titre de section de la page Intranet.
              */
             var configurationOutil = {
                 siteParDefaut: "bichat",
@@ -1323,50 +1335,48 @@
 
             var sitesAPHP = {
                 "bichat": {
-                    pages: { contacts: "#intranet-contacts-internes", smr: "#intranet-smr", domicile: "#intranet-retour-domicile", grand_age: "#intranet-grand-age", handicap: "#intranet-handicap", precarite: "#intranet-precarite" },
+                    pages: { contacts: "https://aphp-pro-ext.aphp.fr/APHPNord/SitePages/Mes-contacts-internes.aspx", ressources: "#intranet-ressources-sortie", difficultes: "#intranet-difficultes-specifiques", cas_complexes: "#intranet-cas-complexes" },
                     ancres: {}
                 },
                 "beaujon": {
-                    pages: { contacts: "#intranet-contacts-internes", smr: "#intranet-smr", domicile: "#intranet-retour-domicile", grand_age: "#intranet-grand-age", handicap: "#intranet-handicap", precarite: "#intranet-precarite" },
+                    pages: { contacts: "https://aphp-pro-ext.aphp.fr/APHPNord/SitePages/Mes-contacts-internes.aspx", ressources: "#intranet-ressources-sortie", difficultes: "#intranet-difficultes-specifiques", cas_complexes: "#intranet-cas-complexes" },
                     ancres: {}
                 }
             };
 
             var pagesIntranetAPHP = {
                 "contacts": { titre: "Mes contacts internes" },
-                "smr": { titre: "SMR / SSR" },
-                "domicile": { titre: "Retour à domicile : soins et coordination" },
-                "grand_age": { titre: "Grand âge" },
-                "handicap": { titre: "Handicap" },
-                "precarite": { titre: "Précarité / sans domicile" }
+                "ressources": { titre: "Mes ressources pour la sortie" },
+                "difficultes": { titre: "Mon patient a des difficultés spécifiques" },
+                "cas_complexes": { titre: "Je n'arrive pas à organiser la sortie" }
             };
 
             var routageIntranetAPHP = {
                 "res_hotel_hosp": { page: "contacts", section: "Hôtel hospitalier" },
-                "res_ssr": { page: "smr", section: "Soins médicaux et de réadaptation (SMR)" },
-                "res_rad_standard": { page: "domicile", section: "Retour à domicile simple" },
-                "res_ssiad": { page: "domicile", section: "Soins infirmiers à domicile" },
-                "res_had": { page: "domicile", section: "Hospitalisation à domicile (HAD)" },
-                "res_hdj": { page: "domicile", section: "Hôpital de jour (HDJ)" },
-                "res_prado": { page: "domicile", section: "PRADO" },
-                "res_cpts": { page: "domicile", section: "Communautés professionnelles territoriales de santé (CPTS)" },
-                "res_dac": { page: "domicile", section: "Dispositifs d'appui à la coordination (DAC)" },
-                "res_apa_saad": { page: "grand_age", section: "APA et aide à domicile (SAD)" },
-                "res_pch": { page: "handicap", section: "Prestation de compensation du handicap (PCH)" },
-                "res_mdph_domicile": { page: "handicap", section: "MDPH : AAH et SAMSAH" },
-                "res_crt": { page: "grand_age", section: "Centres de ressources territoriaux (CRT)" },
-                "res_accueil_jour": { page: "grand_age", section: "Accueil de jour" },
-                "res_maison_repit": { page: "grand_age", section: "Répit et hébergement temporaire" },
-                "res_ehpad": { page: "grand_age", section: "EHPAD" },
-                "res_usld": { page: "grand_age", section: "Unité de soins de longue durée (USLD)" },
-                "res_residence_autonomie": { page: "grand_age", section: "Résidence autonomie" },
-                "res_uspc": { page: "handicap", section: "Unité de soins prolongés complexes (USPC)" },
-                "res_mas": { page: "handicap", section: "Maison d'accueil spécialisée (MAS)" },
-                "res_fam": { page: "handicap", section: "Foyer d'accueil médicalisé (FAM / EAM)" },
-                "res_siao": { page: "precarite", section: "SIAO / 115" },
-                "res_lhss": { page: "precarite", section: "Lits halte soins santé (LHSS)" },
-                "res_lam": { page: "precarite", section: "Lits d'accueil médicalisés (LAM)" },
-                "res_act": { page: "precarite", section: "Appartements de coordination thérapeutique (ACT)" }
+                "res_ssiad": { page: "ressources", section: "Soins infirmiers ou intervenants paramédicaux à domicile" },
+                "res_had": { page: "ressources", section: "Hospitalisation à domicile (HAD)" },
+                "res_ssr": { page: "ressources", section: "Soins médicaux et de réadaptation (SMR)" },
+                "res_hdj": { page: "ressources", section: "Hôpital de jour (HDJ)" },
+                "res_rad_standard": { page: "ressources", section: "Retour à domicile simple" },
+                "res_prado": { page: "ressources", section: "PRADO" },
+                "res_cpts": { page: "ressources", section: "Communautés professionnelles territoriales de santé (CPTS)" },
+                "res_dac": { page: "ressources", section: "Dispositifs d'appui à la coordination (DAC)" },
+                "res_apa_saad": { page: "difficultes", section: "APA et aide à domicile (SAD)" },
+                "res_crt": { page: "difficultes", section: "Centres de ressources territoriaux (CRT)" },
+                "res_accueil_jour": { page: "difficultes", section: "Accueil de jour" },
+                "res_maison_repit": { page: "difficultes", section: "EHPAD (permanent ou temporaire)" },
+                "res_ehpad": { page: "difficultes", section: "EHPAD (permanent ou temporaire)" },
+                "res_usld": { page: "difficultes", section: "Unité de soins de longue durée (USLD)" },
+                "res_residence_autonomie": { page: "difficultes", section: "Résidence autonomie" },
+                "res_pch": { page: "difficultes", section: "Patient porteur de handicap" },
+                "res_mdph_domicile": { page: "difficultes", section: "Patient porteur de handicap" },
+                "res_uspc": { page: "difficultes", section: "Unité de soins prolongés complexes (USPC)" },
+                "res_mas": { page: "difficultes", section: "Maison d'accueil spécialisée (MAS) et Foyer d'accueil médicalisé (FAM / EAM)" },
+                "res_fam": { page: "difficultes", section: "Maison d'accueil spécialisée (MAS) et Foyer d'accueil médicalisé (FAM / EAM)" },
+                "res_siao": { page: "difficultes", section: "SIAO / 115" },
+                "res_lhss": { page: "difficultes", section: "Lits halte soins santé (LHSS) et Lits d'accueil médicalisés (LAM)" },
+                "res_lam": { page: "difficultes", section: "Lits halte soins santé (LHSS) et Lits d'accueil médicalisés (LAM)" },
+                "res_act": { page: "difficultes", section: "Appartements de coordination thérapeutique (ACT)" }
             };
 
             var VERSION_CONTENU = "Version du contenu : novembre 2026";
